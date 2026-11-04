@@ -116,32 +116,70 @@ window.HAISHI = {
   ]
 };
 
-/* 帳簿：觀眾換進來的地方。目前存在每個人自己的瀏覽器裡。
-   之後若要讓所有人共看，換掉 load / add 這兩個函式即可。 */
+/* 帳簿：觀眾換進來的地方，所有人共看一本（存在 Supabase 的 ledger 表，見 supabase/ledger.sql）。
+   現場掃 QR 碼寫的、線上寫的，都會即時出現在每個人的紅繩上，也在 3D 海上浮成樓臺。
+   連不上網時，自己寫的先存在這支手機裡，連上後再補送。 */
+window.HAISHI.ledgerDB = {
+  url: 'https://rduaniobzfgjljaemkpx.supabase.co',
+  key: 'sb_publishable_pS667HVHoQbND-bS49Wb3g_4Y5ZYh7y'      // 這把是公開的金鑰，資料庫的規則才是保護
+};
 window.HaishiLedger = (function () {
-  const KEY = 'haishi-ledger-v2';
-  function load() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; }
-  }
-  // 一個地方有多重：寫得越多越重
+  const KEY = 'haishi-ledger-v2', PEND = 'haishi-pending-v1';
+  const read = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } };
+  const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  let shared = [], db = null, live = false;
+  // 自己換過的（3D 攤子左邊掛的水袋、離線時備用）
+  const load = () => read(KEY);
+  // 一個地方有多重：寫得越多越重（資料庫用同一條公式再算一次）
   function weigh(place, words) {
     const w = Math.min(9.9, 0.8 + ((place || '').length + (words || '').length) * 0.06);
     return Math.round(w * 10) / 10;
   }
+  const newId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const fromRow = r => ({ id: r.id, cid: r.cid, place: r.place, words: r.words, w: r.w, site: r.site || undefined, source: r.source, ts: Date.parse(r.created_at) });
+  const emit = (type, entry) => dispatchEvent(new CustomEvent('haishi-ledger', { detail: { type, entry } }));
+  function send(e) {
+    if (!db) return;
+    db.from('ledger').insert({ cid: e.cid, place: e.place, words: e.words, site: e.site || null }).then(({ error }) => {
+      if (error && error.code !== '23505') return;             // 23505：這張已經送過了
+      write(PEND, read(PEND).filter(p => p.cid !== e.cid));
+    }, () => {});
+  }
+  const flush = () => read(PEND).forEach(send);
   // site：換走的是哪一塊冰的水
   function add(place, words, site) {
-    const entry = { place, words, w: weigh(place, words), ts: Date.now() };
+    const entry = { cid: newId(), place, words, w: weigh(place, words), ts: Date.now() };
     if (site) entry.site = site;
-    const all = load(); all.unshift(entry);
-    try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
+    const mine = load(); mine.unshift(entry); write(KEY, mine.slice(0, 50));
+    const pend = read(PEND); pend.push(entry); write(PEND, pend);
+    send(entry);
     return entry;
   }
+  // 所有人的紙條，新的在前；換進來的還不多時，後面補上幾張範例
   function all() {
+    const seen = new Set(shared.map(e => e.cid));
+    const list = load().filter(e => !seen.has(e.cid)).concat(shared).sort((a, b) => b.ts - a.ts);
+    if (list.length >= 6) return list;
     const now = Date.now();
-    const s = window.HAISHI.samples.map((x, i) => Object.assign({ ts: now - (i + 1) * 86400000 }, x));
-    return load().concat(s);
+    return list.concat(window.HAISHI.samples.map((x, i) => Object.assign({ ts: now - (i + 1) * 86400000, cid: 'sample-' + i }, x)));
   }
-  return { load, add, all, weigh, bag: 1.5 };
+  function start() {
+    const C = window.HAISHI.ledgerDB;
+    if (!C || !window.supabase || !window.supabase.createClient) return;
+    try { db = window.supabase.createClient(C.url, C.key, { auth: { persistSession: false } }); } catch (e) { return; }
+    db.from('ledger').select('id,cid,place,words,w,site,source,created_at').order('created_at', { ascending: false }).limit(200).then(({ data, error }) => {
+      if (error || !data) return;
+      shared = data.map(fromRow); live = true; emit('load'); flush();
+    }, () => {});
+    db.channel('ledger-live').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ledger' }, ({ new: r }) => {
+      if (!r || r.hidden || shared.some(e => e.cid === r.cid)) return;
+      const e = fromRow(r); shared.unshift(e);
+      emit(load().some(m => m.cid === e.cid) ? 'mine' : 'add', e);      // mine：自己寫的那張，從資料庫回來了
+    }).subscribe();
+    addEventListener('online', flush);
+  }
+  start();
+  return { load, add, all, weigh, bag: 1.5, get live() { return live; } };
 })();
 
 /* 冰還剩多少斤：依展期與現場紀錄計算。preview 為 0–1 時改用快轉預覽 */

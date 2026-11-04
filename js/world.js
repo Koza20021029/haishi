@@ -868,7 +868,7 @@
   const bagString = new T.LineBasicMaterial({ color: lin(.7, .06, .05) });
   function hangBags(fresh) {
     bagGroup.clear();
-    window.HaishiLedger.load().filter(e => e.site).slice(0, 6).forEach((e, i) => {
+    window.HaishiLedger.all().filter(e => e.site).slice(0, 6).forEach((e, i) => {     // 所有人換走的水袋
       const site = S(e.site) || S('longkou'), texs = siteTextures(site), tx = texs[i % texs.length];
       const mat = new T.MeshStandardMaterial({ map: tx, emissiveMap: tx, emissive: lin(.55, .6, .65), color: 0xd4ecf2, transparent: true, opacity: .82, roughness: .06, metalness: .1, side: T.DoubleSide });
       const hold = new T.Group(); hold.position.set(-9.6 - i * .62, 5.1, 0);
@@ -1916,7 +1916,7 @@
       speak('成交，多謝喔'); vendorLine = '「成交，多謝喔。」'; vendorUntil = clock.elapsedTime + 6;
       stageDone();
       // 樓臺、紙條、掛起來的水袋分開做，不要一次卡住畫面
-      setTimeout(() => { trade.tower = addTower(entry, towers.length, true); }, 60);
+      setTimeout(() => { towerKeys.add(entry.cid); trade.tower = addTower(entry, towers.length, true); }, 60);
       setTimeout(hangNotes, 240);
       setTimeout(() => hangBags(true), 420);
     });
@@ -2007,6 +2007,18 @@
 
   /* ================= 主迴圈 ================= */
   const clock = new T.Clock();
+  /* 共看：所有人換進來的地方都浮成樓臺。別人剛成交的，從海面浮起來 */
+  let built = false; const towerKeys = new Set();
+  function syncTowers() { window.HaishiLedger.all().slice(0, 40).reverse().forEach(en => { const k = en.cid || en.place; if (towerKeys.has(k)) return; towerKeys.add(k); addTower(en, towers.length, false); }); }
+  addEventListener('haishi-ledger', ({ detail: { type, entry } }) => {
+    if (!built) return;                                  // 場景還沒蓋好，等一下蓋的時候就會一起放進來
+    if (type === 'load') { syncTowers(); hangNotes(); hangBags(false); return; }
+    if (type !== 'add') return;
+    const k = entry.cid || entry.place;
+    if (!towerKeys.has(k) && towers.length < 60) { towerKeys.add(k); addTower(entry, towers.length, true); }
+    hangNotes(); hangBags(!!entry.site);
+    toast(`有人換進來一個地方：<b>${esc(entry.place)}</b><br>它正從海上浮起來。`, 4500);
+  });
   const fontsReady = document.fonts ? Promise.race([
     Promise.all(['900 64px "Noto Serif TC"', '500 64px "Noto Serif TC"', '400 48px "LXGW WenKai TC"'].map(f => document.fonts.load(f, '海市龍口雙溪航空城社子島斤'))),
     new Promise(r => setTimeout(r, 3500))]) : Promise.resolve();
@@ -2014,7 +2026,7 @@
     buildMarket();
     ISL.forEach(buildIsland);
     hangBags(false);
-    window.HaishiLedger.all().forEach((en, i) => addTower(en, i, false));
+    syncTowers(); built = true;
     hangNotes();
     // 招牌與價牌等字型到了再畫，所以重新整理一次材質
     ices.forEach(i => { i.last = ''; });

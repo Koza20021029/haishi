@@ -262,6 +262,7 @@ figcaption { font-size: var(--t-small); color: var(--muted); margin-top: 12px; }
 
 .rope-wrap { margin-top: auto; padding-top: clamp(80px, 9vw, 140px); }
 .rope-wrap h3 { font-size: var(--t-lead); font-weight: 600; letter-spacing: .1em; }
+.rope-wrap h3 .count { margin-left: .8em; font-size: var(--t-small); font-weight: 400; letter-spacing: 0; color: var(--on-dark-2); }
 .rope { position: relative; display: flex; gap: 40px 18px; flex-wrap: wrap; list-style: none; margin: 26px 0 0; padding: 34px 0 0; }
 .rope::before { content: ""; position: absolute; left: calc(-1 * var(--m)); right: calc(-1 * var(--m)); top: 10px; height: 3px; background: var(--red); }
 .rope li { width: min(240px, 100%); background: var(--paper) var(--paper-grain); color: var(--ink); padding: 16px 18px 14px; font-family: var(--f-hand); position: relative; transform-origin: 50% -22px; rotate: var(--r, -1.4deg); transition: rotate .5s var(--ease); }
@@ -478,7 +479,7 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
       </div>
     </form>
     <div class="rope-wrap">
-      <h3>夾在繩上的地方</h3>
+      <h3>夾在繩上的地方<span class="count" id="count"></span></h3>
       <ul class="rope" id="rope"></ul>
     </div>
   </section>
@@ -509,6 +510,7 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
 </footer>
 
 <script>document.documentElement.classList.add('js');</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="js/data.js"></script>
 <script>
 (() => {
@@ -720,13 +722,17 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
     }).join('');
   }
   rope(false);
+  // 共看：別人（線上或攤位前）夾上的紙條，會即時掉到這條繩上
+  const count = () => { const n = window.HaishiLedger.all().filter(e => !e.sample).length; $('count').textContent = n ? `，共 ${n} 個地方` : ''; };
+  count();
+  addEventListener('haishi-ledger', ({ detail: { type } }) => { if (type === 'mine') return; rope(type === 'add' && !reduce); count(); });
   $('trade').addEventListener('submit', e => {
     e.preventDefault();
     const p = $('place').value.trim(), w = $('words').value.trim(); if (!p || !w) return;
     const kg = window.HaishiLedger.weigh(p, w);
     if (kg < BAG) { $('done').textContent = `「${p}」現在 ${kg.toFixed(1)} 斤，還輕了一點，再多說一點這個地方。`; $('words').focus(); return; }
     const en = window.HaishiLedger.add(p, w); e.target.reset(); weighNow(); rope(!reduce);
-    $('done').textContent = `「${p}」秤起來 ${en.w.toFixed(1)} 斤，夾上繩子了。`;
+    $('done').textContent = `「${p}」秤起來 ${en.w.toFixed(1)} 斤，夾上繩子了。所有人都看得到。`; count();
   });
 
   /* ---- 屋頂那張照片：捲動時慢慢往上移，像抬頭看屋頂 ---- */
