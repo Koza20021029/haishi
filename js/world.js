@@ -1724,7 +1724,7 @@
   const V = (x, y, z, theta, phi, radius) => ({ target: new T.Vector3(x, y, z), theta, phi, radius });
   const VIEWS = {
     intro: V(0, 12, 0, 0, 1.54, 175),
-    longkou: V(.3, 2.9, 4, .02, 1.57, 20.4),        // 站在攤子後面、汀州路一段149巷口，人眼的高度，往又低又暗的巷子裡看
+    longkou: V(.3, 2.8, 1.5, .02, 1.57, 18.8),        // 站在攤子後面、汀州路一段149巷口，人眼的高度，往又低又暗的巷子裡看
     overview: V(0, 0, -400, 0, .98, 900),
     stall: V(0, 3.9, 26, .06, 1.36, 19)
   };
@@ -1801,9 +1801,10 @@
   }
   function go(i) {
     if (!started) { started = true; $('intro').classList.add('gone'); $('ui').hidden = false; }
-    chapter = i; caption(i); closePanel(); userMoved = false; target.expo = i === 1 ? .74 : .92;
+    chapter = i; caption(i); closePanel(); userMoved = false; target.expo = i === 1 ? .66 : .92;
+    $('fg').dataset.on = String(i);      // 這一章的近景（照片切出來的收納箱、招牌⋯）從底邊升起
     if (i === 0) { Object.assign(target, { fog: .016, clear: .2, rate: .05, reveal: 0, breath: 0 }); flyTo(VIEWS.intro, 2.5); }
-    if (i === 1) { Object.assign(target, { fog: .034, clear: .35, rate: 1.6, reveal: 0, breath: 1 }); flyTo(VIEWS.longkou, 4.5); }   // 巷口濃一點的霧、暗一點：龍口在吐氣
+    if (i === 1) { Object.assign(target, { fog: .05, clear: .3, rate: 1.6, reveal: 0, breath: 1 }); flyTo(VIEWS.longkou, 4.5); }   // 巷口濃一點的霧、暗一點：龍口在吐氣
     if (i === 2) { Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1 }); flyTo(VIEWS.overview, 5.5); }
     if (i === 3) { Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1 });
       flyTo(islandView('shezi', 110), 4.5, () => setTimeout(() => { if (chapter === 3 && !userMoved) flyTo(islandView('shezi', 16), 9); }, 2600)); }
@@ -1812,7 +1813,7 @@
   function next() { if (!started) return go(0); if (chapter < CH.length - 1) go(chapter + 1); else setFree(true); }
   function prev() { if (chapter > 0) go(chapter - 1); }
   function setFree(on) {
-    free = on; document.body.classList.toggle('free', on);
+    free = on; document.body.classList.toggle('free', on); if (on) $('fg').dataset.on = '';
     $('tourBtn').setAttribute('aria-pressed', String(!on)); $('freeBtn').setAttribute('aria-pressed', String(on));
     if (on) { $('caption').classList.remove('on'); Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1, expo: .92 }); flyTo(VIEWS.overview, 4); toast('拖曳轉動視角，滾輪或雙指縮放。<br>點海上的樓臺或攤上的冰。'); }
   }

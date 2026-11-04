@@ -1,0 +1,12 @@
+前景去背圖（透明 PNG）
+
+來源：images/longkou/ 裡 Koza 拍的龍口市場照片，用 macOS 內建的 Vision 主體去背在本機切出，照片沒有上傳到任何地方。
+
+longkou-drawers.png         407×601  3.jpg 右邊堆高的塑膠收納箱。底部切齊，適合貼著畫面下緣。品質最好。
+longkou-sign-dumpling.png   246×173  2.jpg「水餃餡餅」白底手寫招牌。
+longkou-bicycle.png         217×231  2.jpg 右下腳踏車的前半（龍頭、車籃）。底部切齊。偏暗。
+longkou-basket.png          128×94   2.jpg 左下綠色塑膠籃。解析度低，放小。
+longkou-lantern.png         73×66    3.jpg 橙色「合境平安」燈籠。解析度很低，放小、放遠，或加一點模糊。
+
+原照片解析度不高（1024～1400 寬），所以這些圖放大後會糊。
+放成前景時可以加 filter: blur(1～3px)，看起來像離鏡頭很近、失焦，反而更自然。
