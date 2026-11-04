@@ -166,11 +166,7 @@
     // 做舊：每片浪板深淺不一、換過的新板子、從螺絲往下流的鏽痕
     for (let i = 0; i < w; i += 32) { const k = Math.random(); x.fillStyle = k < .3 ? 'rgba(0,0,0,.18)' : k > .85 ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,0)'; x.fillRect(i, 0, 32, h); }
     for (let k = 0; k < 14; k++) { const sx = Math.random() * w, len = 18 + Math.random() * 70, gr = x.createLinearGradient(0, 0, 0, len);
-      gr.addColorStop(0, 'rgba(120,58,28,.55)'); gr.addColorStop(1, 'rgba(120,58,28,0)'); x.fillStyle = gr; x.save(); x.translate(0, Math.random() * h * .4); x.fillRect(sx, 0, 2 + Math.random() * 3, len); x.restore(); } });
-  // 牆腳的髒：越靠地面越暗，像假的環境光遮蔽，加上雨水往下流的黑痕
-  const grimeTex = canvasTex(64, 128, (x, w, h) => { x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
-    const gr = x.createLinearGradient(0, h * .72, 0, h); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.55)'); x.fillStyle = gr; x.fillRect(0, 0, w, h);
-    for (let k = 0; k < 18; k++) { x.fillStyle = `rgba(30,28,24,${.08 + Math.random() * .14})`; x.fillRect(Math.random() * w, 0, 1 + Math.random() * 2, 10 + Math.random() * 60); } }, true);
+      gr.addColorStop(0, 'rgba(120,58,28,.28)'); gr.addColorStop(1, 'rgba(120,58,28,0)'); x.fillStyle = gr; x.save(); x.translate(0, Math.random() * h * .4); x.fillRect(sx, 0, 2 + Math.random() * 3, len); x.restore(); } });
   const roofTex = corrugated('#5d686c', '#8a9599'); roofTex.wrapS = roofTex.wrapT = T.RepeatWrapping; roofTex.repeat.set(10, 3);
   const shutterTex = canvasTex(128, 128, (x, w, h) => { x.fillStyle = '#8b9295'; x.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 6) { x.fillStyle = '#6b7275'; x.fillRect(0, y, w, 2); x.fillStyle = '#a4abad'; x.fillRect(0, y + 2, w, 1); }
     for (let k = 0; k < 30; k++) { x.fillStyle = `rgba(90,60,40,${Math.random() * .25})`; x.fillRect(Math.random() * w, Math.random() * h, 3, 4 + Math.random() * 30); } });
@@ -545,6 +541,21 @@
     mg.box(M.poleBand, .36, .5, .36, x, G0 + 2.1, z); mg.box(M.styro, .36, .5, .36, x, G0 + 2.6, z);
   }
 
+  /* Koza 照片切出來的東西，放回 3D 的巷子裡：跟著透視、被霧吞掉，不再黏在螢幕上 */
+  function photoProps() {
+    const put = (src, w, h, x, y, z, ry, tint, parent = LK) => {
+      const t = new T.TextureLoader().load(src); t.encoding = T.sRGBEncoding; t.anisotropy = 4;
+      const m = new T.MeshBasicMaterial({ map: t, color: tint, transparent: true, alphaTest: .45, side: T.DoubleSide, fog: true });
+      const o = new T.Mesh(new T.PlaneGeometry(w, h), m); o.position.set(x, y + h / 2, z); o.rotation.y = ry; parent.add(o); return o; };
+    // 主巷左邊靠牆，一落一落的收納箱（3.jpg）
+    put('images/foreground/longkou-drawers.png', 1.3, 1.92, -1.02, G0, 13.4, .55, lin(.3, .27, .22));
+    put('images/foreground/longkou-basket.png', .62, .46, -.55, G0, 14.3, .3, lin(.3, .34, .28));
+    // 吊在巷子頂下的「水餃餡餅」招牌和一顆燈籠（2.jpg、3.jpg）
+    put('images/foreground/longkou-sign-dumpling.png', 1.15, .81, .78, G0 + 2.15, 12.8, -.25, lin(.55, .52, .46));
+    put('images/foreground/longkou-lantern.png', .46, .42, -.35, G0 + 2.55, 13.6, 0, lin(1.4, .9, .55));
+    // 攤子旁邊停著的腳踏車（2.jpg）
+    put('images/foreground/longkou-bicycle.png', 1.25, 1.33, -2.2, 0, 1.6, .2, lin(.4, .38, .34), KZ);
+  }
   function buildMarket() {
     const mg = Merger(), signAtlas = makeSignAtlas(), stallSigns = makeStallSigns();
     const SG = new T.MeshStandardMaterial({ map: signAtlas, roughness: .7, side: T.DoubleSide });
@@ -1000,14 +1011,39 @@
   // 實拍照片當牆面：裁出需要的那一塊（repeat / offset 以照片的比例計），夜裡自己帶一點亮度
   const photoTex = (src, rep, off) => { const t = new T.TextureLoader().load(src); t.encoding = T.sRGBEncoding; t.anisotropy = 4; t.repeat.set(rep[0], rep[1]); t.offset.set(off[0], off[1]); return t; };
   const photoMat = (K, src, rep, off, lit = .5) => { const t = photoTex(src, rep, off); return K.reg(new T.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: lin(lit, lit * .95, lit * .88), emissiveIntensity: 1, roughness: .9 })); };
+  /* 真實一點的牆：照牆在場景裡真正的位置算，不靠一張被拉長的貼圖，所以每面牆的磚一樣大、不會出現一條條等距的黑線。
+     磁磚牆有磚縫、每塊深淺不一；粉刷牆是一片一片暈開的水漬；所有牆越靠地面越暗。屋頂、地面不受影響。 */
+  function realWall(mat, tiles) {
+    mat.onBeforeCompile = sh => {
+      sh.vertexShader = 'varying vec3 vObjP; varying vec3 vObjN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvObjP = position; vObjN = normal;');
+      sh.fragmentShader = `varying vec3 vObjP; varying vec3 vObjN;
+        float wh(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
+        float wn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+          return mix(mix(wh(i), wh(i + vec2(1., 0.)), f.x), mix(wh(i + vec2(0., 1.)), wh(i + vec2(1., 1.)), f.x), f.y); }
+        float wallShade(){
+          vec3 n = abs(normalize(vObjN)); if (n.y > .7) return 1.;
+          float u = n.x > n.z ? vObjP.z : vObjP.x, v = vObjP.y, k = 1.;
+          ${tiles ? `float row = floor(v / .22), uu = u / .46 + mod(row, 2.) * .5;
+          float mort = max(1. - smoothstep(.0, .06, fract(v / .22)), 1. - smoothstep(.0, .035, fract(uu)));
+          k *= (1. - mort * .2) * (.93 + wh(vec2(floor(uu), row)) * .12);` : `k *= .94 + wn(vec2(u, v) * 2.5) * .1;`}
+          float stain = smoothstep(.45, .85, wn(vec2(u * .35, v * .22 + u * .05)));        // 一片一片暈開的水漬，沒有直線
+          k *= 1. - stain * ${tiles ? '.16' : '.26'};
+          k *= mix(.6, 1., smoothstep(1.4, 3.6, v));                                       // 牆腳暗
+          return k; }
+        ` + sh.fragmentShader
+        .replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb *= wallShade();')
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance *= wallShade();');
+    };
+    return mat;
+  }
   function islandKit(mats) {
     const reg = m => { m.transparent = true; m.userData.base = m.opacity; mats.push(m); return m; };
     const facW = [0, 1, 2, 3, 4, 5].map(v => { const f = walkupTex(v); return reg(new T.MeshStandardMaterial({ map: f.map, emissiveMap: f.emi, emissive: lin(1.4, 1, .6), emissiveIntensity: 1, roughness: .85 })); });
     const facBoard = [0, 2, 4].map(v => { const f = walkupTex(v, true); return reg(new T.MeshStandardMaterial({ map: f.map, emissiveMap: f.emi, emissive: lin(1.4, 1, .6), emissiveIntensity: 1, roughness: .85 })); });
     const K = {
       reg, facW, facBoard,
-      wall: reg(new T.MeshStandardMaterial({ color: 0x6f6a62, map: grimeTex, emissiveMap: grimeTex, emissive: new T.Color(0x6f6a62).multiplyScalar(.26), roughness: .92 })),
-      wallW: reg(new T.MeshStandardMaterial({ color: 0xbab6aa, map: grimeTex, emissiveMap: grimeTex, emissive: new T.Color(0xbab6aa).multiplyScalar(.26), roughness: .9 })),
+      wall: reg(realWall(new T.MeshStandardMaterial({ color: 0x6f6a62, emissive: new T.Color(0x6f6a62).multiplyScalar(.26), roughness: .92 }), false)),     // 洗石子、水泥粉刷
+      wallW: reg(realWall(new T.MeshStandardMaterial({ color: 0xbab6aa, emissive: new T.Color(0xbab6aa).multiplyScalar(.26), roughness: .9 }), true)),       // 二丁掛磁磚
       concrete: reg(new T.MeshStandardMaterial({ map: concreteTex, roughness: .9 })),
       tinBlue: reg(new T.MeshStandardMaterial({ map: tinTex('#355a75', '#5d86a2'), roughness: .5, metalness: .35 })),
       tinRust: reg(new T.MeshStandardMaterial({ map: tinTex('#6a4430', '#94654a'), roughness: .65, metalness: .3 })),
@@ -1524,7 +1560,7 @@
     mg.put(ground, landGeo(inner));
     const leveeTex = canvasTex(256, 64, (c, w, h) => { c.fillStyle = '#7a8285'; c.fillRect(0, 0, w, h); for (let k = 0; k < w; k += 32) { c.fillStyle = '#5f676a'; c.fillRect(k, 0, 2, h); } c.fillStyle = '#9aa2a4'; c.fillRect(0, 0, w, 5);
       for (let k = 0; k < 120; k++) { c.fillStyle = `rgba(30,40,35,${Math.random() * .35})`; c.fillRect(Math.random() * w, h * .45 + Math.random() * h * .55, 1 + Math.random() * 3, 3 + Math.random() * 14); }
-      for (let k = 0; k < 70; k++) { const len = 8 + Math.random() * 46, gx = Math.random() * w, gr = c.createLinearGradient(0, 5, 0, 5 + len); gr.addColorStop(0, 'rgba(18,22,20,.5)'); gr.addColorStop(1, 'rgba(18,22,20,0)'); c.fillStyle = gr; c.fillRect(gx, 5, 1 + Math.random() * 2.5, len); } });   // 堤防上雨水流下來的黑痕
+      for (let k = 0; k < 70; k++) { const len = 8 + Math.random() * 46, gx = Math.random() * w, gr = c.createLinearGradient(0, 5, 0, 5 + len); gr.addColorStop(0, 'rgba(18,22,20,.26)'); gr.addColorStop(1, 'rgba(18,22,20,0)'); c.fillStyle = gr; c.fillRect(gx, 5, 3 + Math.random() * 6, len); } });   // 堤防上雨水流下來的痕：淡、寬，不是細黑線
     leveeTex.wrapS = leveeTex.wrapT = T.RepeatWrapping; leveeTex.repeat.set(.12, .14);
     mg.put(K.reg(new T.MeshStandardMaterial({ map: leveeTex, emissiveMap: leveeTex, emissive: lin(.12, .13, .14), emissiveIntensity: 1, roughness: .9 })), landGeo(SHEZI_OUT, 5.2, 6.4, [inner.slice().reverse()]));
     // 堤外的泥灘與蘆葦
@@ -1866,7 +1902,6 @@
   function go(i) {
     if (!started) { started = true; $('intro').classList.add('gone'); $('ui').hidden = false; }
     chapter = i; caption(i); closePanel(); userMoved = false; target.expo = i === 1 ? .66 : .92;
-    $('fg').dataset.on = String(i);      // 這一章的近景（照片切出來的收納箱、招牌⋯）從底邊升起
     if (i === 0) { Object.assign(target, { fog: .016, clear: .2, rate: .05, reveal: 0, breath: 0 }); flyTo(VIEWS.intro, 2.5); }
     if (i === 1) { Object.assign(target, { fog: .05, clear: .3, rate: 1.6, reveal: 0, breath: 1 }); flyTo(VIEWS.longkou, 4.5); }   // 巷口濃一點的霧、暗一點：龍口在吐氣
     if (i === 2) { Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1 }); flyTo(VIEWS.overview, 5.5); }
@@ -1877,7 +1912,7 @@
   function next() { if (!started) return go(0); if (chapter < CH.length - 1) go(chapter + 1); else setFree(true); }
   function prev() { if (chapter > 0) go(chapter - 1); }
   function setFree(on) {
-    free = on; document.body.classList.toggle('free', on); if (on) $('fg').dataset.on = '';
+    free = on; document.body.classList.toggle('free', on);
     $('tourBtn').setAttribute('aria-pressed', String(!on)); $('freeBtn').setAttribute('aria-pressed', String(on));
     if (on) { $('caption').classList.remove('on'); Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1, expo: .92 }); flyTo(VIEWS.overview, 4); toast('拖曳轉動視角，滾輪或雙指縮放。<br>點海上的樓臺或攤上的冰。'); }
   }
@@ -2114,7 +2149,7 @@
     Promise.all(['900 64px "Noto Serif TC"', '500 64px "Noto Serif TC"', '400 48px "LXGW WenKai TC"'].map(f => document.fonts.load(f, '海市龍口雙溪航空城社子島斤'))),
     new Promise(r => setTimeout(r, 3500))]) : Promise.resolve();
   fontsReady.then(() => {
-    buildMarket();
+    buildMarket(); photoProps();
     ISL.forEach(buildIsland);
     hangBags(false);
     syncTowers(); built = true;
