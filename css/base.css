@@ -1,0 +1,28 @@
+/* 《海市》共用設計語言
+   一條地平線分開兩個世界：上面是蜃吐出的海市（夜海、珍珠般的水氣），下面是龍口市場（白鐵攤台、紅繩、手寫價牌）。
+   每頁刻意只用一種外觀：海市頁是夜，市場頁是白鐵，不跟隨系統深淺色。 */
+:root {
+  --sea: #0e1a22;        /* 夜海 */
+  --sea-2: #172833;
+  --pearl: #e3e6ea;      /* 蜃氣、珍珠 */
+  --vapor-a: #cfc7e0;    /* 水氣的紫 */
+  --vapor-b: #b7e0e2;    /* 水氣的青 */
+  --ice: #c4e6ec;
+  --red: #c4362c;        /* 紅繩、價牌 */
+  --steel: #e8ecec;      /* 白鐵攤台 */
+  --steel-2: #d3d9d9;
+  --ink: #1a2529;
+  --ink-soft: #55656a;
+  --f-myth: "Noto Serif TC", "Songti TC", "PMingLiU", serif;      /* 神話、標題 */
+  --f-hand: "LXGW WenKai TC", "Kaiti TC", "DFKai-SB", serif;      /* 價牌、叫賣，手寫感 */
+  --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { font-family: var(--f-body); font-size: 16px; line-height: 1.8; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+.vertical { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: .35em; }
+.tag-red { font-family: var(--f-hand); background: var(--red); color: #fff; padding: 2px 10px; border-radius: 2px; display: inline-block; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

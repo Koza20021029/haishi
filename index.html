@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>海市・龍口市場裡的一個攤位</title>
+<meta name="description" content="海市是龍口市場裡的一個攤位：四塊冰在秤上慢慢化，用你離開過的一個地方，換走一袋融水。上面是海，看見 3D 的海市；下面是市，走進市場。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23f0d44a'/%3E%3Ctext x='32' y='47' text-anchor='middle' font-size='42' font-weight='900' fill='%23c4362c' font-family='serif'%3E海%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=LXGW+WenKai+TC:wght@700&display=swap">
+<link rel="stylesheet" href="css/base.css">
+<style>
+/* 入口：「海市」兩個字被地平線切開。
+   「海」在線上，是蜃吐出來的海市：珍珠色、在熱空氣裡晃，通往 3D。
+   「市」在線下，是龍口市場的招牌：黃底紅字、站得穩穩的，通往一般網頁。
+   游標在海上，地平線往下退，海市變大；游標在市場，地平線往上收，看到巷口。 */
+:root {
+  --m: clamp(20px, 2.6vw, 40px);
+  --night: #070c10;
+  --pearl: #eceef4;
+  --pearl-2: #b9c0d0;
+  --board: #f0d44a;
+  --red: #c4362c; --red-2: #a52b22;
+  --paper: #f3f4f0;
+  --ink: #1d2826;
+  --glyph: clamp(150px, min(36vh, 30vw), 440px);
+}
+html, body { height: 100%; margin: 0; background: var(--night); color: var(--pearl); overflow: hidden; font-family: var(--f-myth); }
+a { color: inherit; text-decoration: none; }
+.sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.gate { position: fixed; inset: 0; overflow: hidden; }
+
+/* 線上：夜海與海市 */
+.sea { position: absolute; inset: 0; display: block; cursor: pointer; }
+.sky { position: absolute; left: 0; right: 0; bottom: 50%; height: 72svh; will-change: transform; }
+.sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.grain { position: absolute; inset: 0; pointer-events: none; opacity: .4; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E"); }
+
+/* 線下：龍口市場的巷口 */
+.market { position: absolute; inset: 0; display: block; clip-path: inset(50% 0 0 0); will-change: clip-path; background: #0d1110; }
+.market .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; filter: brightness(.52) saturate(.85) contrast(1.05); }
+.market .wet { position: absolute; left: 0; right: 0; top: 50%; height: 50%; will-change: transform; }
+.market .wet canvas { width: 100%; height: 100%; display: block; mix-blend-mode: screen; }
+
+/* 地平線：整個網站最重要的一條線 */
+/* taste-skill-ignore: 地平線就是這個網站的概念，不是分隔線 */
+.horizon { position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: #f6f7fa; z-index: 4; pointer-events: none; will-change: transform; transform-origin: 50% 50%; }
+
+/* 兩個字 */
+h1.g { margin: 0; padding-top: .14em; font-weight: 900; }
+h1.g .sr { font-size: 1px; }
+.g-shi { pointer-events: none; }
+.g { position: absolute; z-index: 5; line-height: 1; font-size: var(--glyph); will-change: transform; }
+.g-hai { left: max(var(--m), calc(50% - var(--glyph) * 1.25)); top: 50%; translate: 0 -88%; color: var(--pearl); filter: url(#heat); }
+.g-shi { right: max(var(--m), calc(50% - var(--glyph) * 1.25)); top: 50%; translate: 0 calc(var(--glyph) * .2); }
+.g-shi b { display: block; font-size: .78em; font-weight: 900; color: var(--red); background: var(--board); padding: .06em .12em .1em; outline: max(5px, .025em) solid var(--red); outline-offset: -.07em; }
+.sub { font-size: 0; }
+
+/* 字旁邊的說明與動作 */
+.lab { position: absolute; z-index: 6; display: grid; gap: 8px; max-width: 24em; will-change: transform; }
+.lab b { font-size: clamp(22px, 2.2vw, 30px); font-weight: 900; letter-spacing: .2em; }
+.lab span { font-size: 17px; line-height: 1.65; }
+.lab-sea { left: calc(max(var(--m), calc(50% - var(--glyph) * 1.25)) + var(--glyph) * 1.08); top: 50%; translate: 0 calc(-1 * var(--glyph) * .86); color: var(--pearl); }
+.lab-sea span { color: var(--pearl-2); }
+.lab-mkt { right: calc(max(var(--m), calc(50% - var(--glyph) * 1.25)) + var(--glyph) * 1.08); top: 50%; translate: 0 calc(var(--glyph) * .2 + 6px); text-align: right; justify-items: end; }
+.lab-mkt b { color: var(--board); }
+.lab-mkt span { color: #dfe4d8; }
+.lab b::after { content: ""; display: block; height: 2px; margin-top: 8px; background: currentColor; transform: scaleX(.18); transform-origin: left; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+.lab-mkt b::after { transform-origin: right; }
+.sea:hover ~ .lab-sea b::after, .sea:focus-visible ~ .lab-sea b::after, .market:hover ~ .lab-mkt b::after, .market:focus-visible ~ .lab-mkt b::after { transform: scaleX(1); }
+.sea:focus-visible, .market:focus-visible { outline: 3px solid var(--board); outline-offset: -8px; }
+.lab { pointer-events: none; }
+
+/* 紅繩上的紙條：直接到市場頁的某一段 */
+.rope { position: absolute; left: var(--m); right: calc(max(var(--m), calc(50% - var(--glyph) * 1.25)) + var(--glyph) * 1.08); justify-content: flex-end; z-index: 6; top: 50%; translate: 0 calc(var(--glyph) * .2 + 150px); display: flex; flex-wrap: wrap; gap: 14px; margin: 0; padding: 18px 0 0; list-style: none; will-change: transform; }
+.rope::before { content: ""; position: absolute; left: calc(-1 * var(--m)); right: -24px; top: 4px; height: 2px; background: var(--red); }
+.rope a { display: block; position: relative; font-family: var(--f-hand); font-weight: 700; font-size: 17px; line-height: 1.3; color: var(--ink); padding: 9px 13px 8px; transform-origin: 50% -14px; rotate: var(--r, -1.6deg); transition: rotate .45s cubic-bezier(.3,1.5,.5,1), translate .45s cubic-bezier(.3,1.5,.5,1);
+  background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .18 0 0 0 0 .12 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E"); }
+.rope li:nth-child(even) a { --r: 1.4deg; }
+.rope li { animation: sway 5.5s ease-in-out infinite alternate; animation-delay: calc(var(--i, 0) * -1.1s); transform-origin: 50% 0; }
+.rope li:nth-child(2) { --i: 1; } .rope li:nth-child(3) { --i: 2; } .rope li:nth-child(4) { --i: 3; } .rope li:nth-child(5) { --i: 4; }
+@keyframes sway { from { rotate: -1.6deg; } to { rotate: 1.8deg; } }
+.rope a::before { content: ""; position: absolute; top: -12px; left: 50%; width: 8px; height: 14px; margin-left: -4px; background: #9aa5a3; }
+.rope a:hover, .rope a:focus-visible { rotate: 0deg; translate: 0 3px; background-color: #fff; }
+.rope a:focus-visible { outline: 3px solid var(--board); outline-offset: 2px; }
+
+.quote { position: absolute; z-index: 6; left: var(--m); top: max(var(--m), env(safe-area-inset-top, 0px)); display: flex; gap: 14px; pointer-events: none; writing-mode: vertical-rl; }
+.quote span:first-child { font-size: 17px; letter-spacing: .5em; }
+.quote span:last-child { font-size: 14px; letter-spacing: .4em; opacity: .75; }
+.about { position: absolute; z-index: 6; right: var(--m); top: max(var(--m), env(safe-area-inset-top, 0px)); margin: 0; max-width: 21em; font-size: 17px; line-height: 1.75; color: var(--pearl-2); pointer-events: none; text-align: right; }
+.credit { position: absolute; z-index: 6; right: var(--m); bottom: max(24px, env(safe-area-inset-bottom, 0px)); margin: 0; font-size: 14px; color: #c3cbc4; pointer-events: none; }
+
+/* 開場：地平線拉開，「海」從線上浮起、「市」掛上來 */
+.horizon { scale: 0 1; animation: line 1.2s cubic-bezier(.6,0,.2,1) .1s forwards; }
+@keyframes line { to { scale: 1 1; } }
+.g-hai { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes rise { from { opacity: .35; clip-path: inset(60% 0 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
+.g-shi { animation: hang 2s cubic-bezier(.3,.7,.3,1) .4s both; transform-origin: 50% 0; }
+@keyframes hang { 0% { opacity: 0; rotate: 0deg; translate: 0 calc(var(--glyph) * .2 - 40px); } 25% { opacity: 1; rotate: 3deg; translate: 0 calc(var(--glyph) * .2); } 50% { rotate: -1.8deg; } 75% { rotate: .7deg; } 100% { rotate: 0deg; translate: 0 calc(var(--glyph) * .2); } }
+.lab, .rope, .about { animation: fade 1s ease 1.6s both; }
+@keyframes fade { from { opacity: 0; } }
+
+@media (max-width: 760px) {
+  :root { --glyph: min(40vw, 30svh); }
+  .g-hai { left: var(--m); }
+  .g-shi { right: var(--m); }
+  .lab-sea { left: auto; right: var(--m); text-align: right; justify-items: end; translate: 0 calc(-100% - 22px); }
+  .lab-sea b::after { transform-origin: right; }
+  .lab-mkt { right: auto; left: var(--m); text-align: left; justify-items: start; }
+  .lab-mkt b::after { transform-origin: left; }
+  .lab b { font-size: 20px; letter-spacing: .14em; }
+  .lab span { font-size: 16px; }
+  .lab br { display: none; }
+  .lab-sea, .lab-mkt { max-width: 10.5em; }
+  .rope { translate: 0 calc(var(--glyph) * .2 + var(--glyph) * .9 + 22px); gap: 12px 10px; right: var(--m); justify-content: flex-start; }
+  .rope a { font-size: 16px; padding: 8px 11px 7px; }
+  .quote span:last-child { display: none; }
+  .about { left: calc(var(--m) + 48px); max-width: none; font-size: 16px; }
+  .credit { bottom: max(14px, env(safe-area-inset-bottom, 0px)); }
+}
+@media (max-height: 640px) { .about { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .horizon, .g, .lab, .rope, .rope li, .about { animation: none !important; } .horizon { scale: 1 1; }
+  .g-hai { filter: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="heat" x="-10%" y="-10%" width="120%" height="120%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.004 0.06" numOctaves="2" seed="3" result="n">
+      <animate attributeName="baseFrequency" dur="7s" values="0.004 0.06;0.005 0.085;0.004 0.06" repeatCount="indefinite"/>
+    </feTurbulence>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G">
+      <animate attributeName="scale" id="heatScale" dur="5s" values="3;5.5;3" repeatCount="indefinite"/>
+    </feDisplacementMap>
+  </filter>
+</svg>
+<main class="gate" id="gate">
+  <a class="sea" id="sea" href="world.html" aria-label="看見海市，進入 3D 的海上">
+    <div class="sky" id="skyL"><canvas id="sky" aria-hidden="true"></canvas><span class="grain" aria-hidden="true"></span></div>
+    <h1 class="g g-hai" id="gHai"><span aria-hidden="true">海</span><span class="sr">海市，龍口市場裡的一個攤位</span></h1>
+  </a>
+  <a class="market" id="mkt" href="market.html" aria-label="市：走進市場，一般網頁">
+    <img class="photo" src="images/longkou/1.jpg" width="1024" height="681" alt="" fetchpriority="high">
+    <div class="wet" id="wetL"><canvas id="counter" aria-hidden="true"></canvas></div>
+  </a>
+  <div class="horizon" id="hz" aria-hidden="true"></div>
+  <span class="g g-shi" id="gShi" aria-hidden="true"><b>市</b></span>
+  <div class="lab lab-sea" id="labSea" aria-hidden="true"><b>看見海市</b><span>3D 的海上，三座看得見、<br>到不了的樓臺</span></div>
+  <div class="lab lab-mkt" id="labMkt" aria-hidden="true"><b>走進市場</b><span>龍口市場裡的一個攤位，<br>四塊冰，用一個地方換一袋水</span></div>
+  <ul class="rope" id="rope" aria-label="直接到市場裡的攤位">
+    <li><a href="market.html#about">海市是什麼</a></li>
+    <li><a href="market.html#sites">四個場域</a></li>
+    <li><a href="market.html#walked">走讀撿到的</a></li>
+    <li><a href="market.html#stall">龍口的攤位</a></li>
+    <li><a href="market.html#ledger">帳簿</a></li>
+  </ul>
+  <div class="quote" aria-hidden="true"><span>海旁蜃氣象樓臺</span><span>史記天官書</span></div>
+  <p class="about">四塊冰在秤上慢慢化，各投著一個地方的照片。這攤不收錢，用你離開過的一個地方，換走一袋融水。12 月 5 日至 6 日，臺北龍口市場。</p>
+  <p class="credit">浪青計劃 2026，Koza</p>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const cv = $('sky'), x = cv.getContext('2d');
+  const cc = $('counter'), y2 = cc.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const touch = matchMedia('(hover: none)').matches;
+  const DPR = Math.min(2, devicePixelRatio || 1);
+  let W, H, CW, CH, art, ghost, stars, hot = 0, t0 = null;
+  let s = 11; const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+
+  function makeArt() {
+    const c = document.createElement('canvas'); c.width = W; c.height = Math.round(H * .66);
+    const t = c.getContext('2d'), G = c.height - 1;
+    const U = Math.min(W / 880, H / 430);
+    const LINE = 'rgba(232,236,255,.88)', SOFT = 'rgba(232,236,255,.34)', FILL = 'rgba(190,200,235,.06)';
+    t.lineJoin = 'round'; t.lineCap = 'round';
+    let ox = 0;
+    const X = v => ox + v * U, Y = v => G - v * U;
+    const lw = k => (t.lineWidth = Math.max(1, DPR * k));
+    const path = (pts, close, fill) => { t.beginPath(); pts.forEach(([a, b], i) => i ? t.lineTo(X(a), Y(b)) : t.moveTo(X(a), Y(b))); if (close) t.closePath(); if (fill) { t.fillStyle = FILL; t.fill(); } t.stroke(); };
+    const seg = (a, b, c2, d) => { t.beginPath(); t.moveTo(X(a), Y(b)); t.lineTo(X(c2), Y(d)); t.stroke(); };
+    const bldg = (x0, y0, w, h, o = {}) => {
+      t.strokeStyle = LINE; lw(.85); path([[x0, y0], [x0, y0 + h], [x0 + w, y0 + h], [x0 + w, y0]], true, true);
+      t.strokeStyle = SOFT; lw(.6);
+      const fl = o.floor || 9;
+      for (let yy = y0 + fl; yy < y0 + h - 1; yy += fl) seg(x0, yy, x0 + w, yy);
+      const cols = o.cols ?? 2; for (let k = 1; k <= cols; k++) seg(x0 + w * k / (cols + 1), y0, x0 + w * k / (cols + 1), y0 + h);
+      if (o.boarded) { t.strokeStyle = 'rgba(232,236,255,.7)'; seg(x0 + 3, y0 + 3, x0 + w - 3, y0 + h - 3); seg(x0 + 3, y0 + h - 3, x0 + w - 3, y0 + 3); }
+    };
+
+    /* 航空城 */
+    ox = W * .15;
+    bldg(52, 0, 11, 132, { floor: 12, cols: 0 });
+    t.strokeStyle = LINE; lw(.9); path([[46, 132], [69, 132], [74, 150], [41, 150]], true, true); path([[40, 150], [75, 150], [72, 156], [43, 156]], true, true); seg(57.5, 156, 57.5, 172);
+    t.strokeStyle = SOFT; lw(.6); for (let k = 0; k < 4; k++) seg(46 + k * 8, 134, 44 + k * 9.5, 148);
+    t.strokeStyle = LINE; lw(.9); path([[-78, 0], [-78, 22], [-22, 22], [-22, 0]], false, true);
+    seg(-70, 0, -70, 22); seg(-30, 0, -30, 22); path([[-58, 0], [-58, 14], [-42, 14], [-42, 0]]);
+    t.beginPath(); t.moveTo(X(-90), Y(30)); t.quadraticCurveTo(X(-50), Y(20), X(-10), Y(30)); t.stroke();
+    t.beginPath(); t.moveTo(X(-84), Y(22)); t.lineTo(X(-90), Y(30)); t.moveTo(X(-16), Y(22)); t.lineTo(X(-10), Y(30)); t.stroke();
+    t.beginPath(); t.moveTo(X(-82), Y(37)); t.quadraticCurveTo(X(-50), Y(30), X(-18), Y(37)); t.stroke();
+    t.beginPath(); t.moveTo(X(-82), Y(37)); t.quadraticCurveTo(X(-86), Y(41), X(-92), Y(46)); t.moveTo(X(-18), Y(37)); t.quadraticCurveTo(X(-14), Y(41), X(-8), Y(46)); t.stroke();
+    t.beginPath(); t.moveTo(X(-64), Y(37)); t.quadraticCurveTo(X(-50), Y(44), X(-36), Y(37)); t.moveTo(X(-64), Y(37)); t.lineTo(X(-66), Y(30)); t.moveTo(X(-36), Y(37)); t.lineTo(X(-34), Y(30)); t.stroke();
+    t.beginPath(); t.arc(X(-50), Y(45), 2.2 * U, 0, 7); t.stroke();
+    bldg(-128, 0, 24, 30, { boarded: true, floor: 10, cols: 0 }); bldg(-102, 0, 20, 20, { boarded: true, floor: 10, cols: 0 });
+    bldg(-16, 0, 26, 34, { boarded: true, floor: 11, cols: 0 }); bldg(12, 0, 22, 24, { floor: 8, cols: 1 }); bldg(76, 0, 34, 18, { boarded: true, floor: 9, cols: 0 });
+    t.strokeStyle = LINE; lw(.9); path([[-91, 0], [-91, 9], [-86, 10.5], [-81, 9], [-81, 0]], false, true);
+    path([[-60, 118], [-8, 126], [-2, 128], [-8, 130], [-56, 124], [-66, 132], [-70, 132], [-64, 122]], true, true);
+    path([[-36, 125], [-22, 112], [-17, 112], [-26, 126]]); path([[-36, 127], [-28, 137], [-24, 137], [-28, 127]]);
+
+    /* 雙溪 */
+    ox = W * .37;
+    t.strokeStyle = SOFT; lw(.7);
+    t.beginPath(); t.moveTo(X(-125), Y(0)); [[-100, 38], [-74, 62], [-44, 96], [-18, 82], [8, 104], [40, 128], [72, 96], [104, 66], [128, 20]].forEach(([a, b]) => t.lineTo(X(a), Y(b))); t.stroke();
+    t.beginPath(); t.moveTo(X(-112), Y(14)); [[-80, 40], [-50, 56], [-20, 48], [16, 70], [52, 62], [92, 40], [118, 12]].forEach(([a, b]) => t.lineTo(X(a), Y(b))); t.stroke();
+    bldg(26, 0, 70, 30, { floor: 10, cols: 4 }); bldg(40, 30, 56, 20, { floor: 10, cols: 3 }); bldg(58, 50, 38, 14, { floor: 7, cols: 2 }); bldg(96, 0, 22, 44, { floor: 11, cols: 1 });
+    t.strokeStyle = LINE; lw(1.2); seg(-112, 16, 20, 16); lw(.85); seg(-112, 27, 20, 27); seg(-112, 19, 20, 19);
+    t.strokeStyle = SOFT; lw(.7); for (let k = -112; k <= 20; k += 5) seg(k, 19, k, 27);
+    t.strokeStyle = LINE; lw(.9); path([[-116, 16], [-116, 30], [-108, 30], [-108, 16]]); path([[16, 16], [16, 30], [24, 30], [24, 16]]);
+    for (const px of [-76, -36]) path([[px - 3, 0], [px - 3, 16], [px + 3, 16], [px + 3, 0]]);
+    t.strokeStyle = SOFT; lw(.6); for (let k = 0; k < 3; k++) { t.beginPath(); for (let xx = -100; xx <= 10; xx += 4) { const yy = 4 + k * 3 + Math.sin(xx * .3 + k) * .8; xx === -100 ? t.moveTo(X(xx), Y(yy)) : t.lineTo(X(xx), Y(yy)); } t.stroke(); }
+
+    /* 龍口：一層樓高的鐵皮屋頂連成一片，巷口掛著黃色的招牌，旁邊一棟紅磚老樓，後面是兩三層的老房子和水塔 */
+    ox = W * .6;
+    bldg(-128, 0, 24, 30, { floor: 10, cols: 1 }); bldg(-104, 0, 20, 22, { floor: 11, cols: 0 }); bldg(92, 0, 26, 30, { floor: 10, cols: 1 }); bldg(118, 0, 22, 20, { floor: 10, cols: 0 });
+    bldg(-60, 14, 18, 18, { floor: 9, cols: 0 }); bldg(64, 14, 16, 14, { floor: 7, cols: 0 });
+    t.strokeStyle = LINE; lw(.8); for (const [tx, ty] of [[-114, 30], [-51, 32], [105, 30], [72, 28]]) { path([[tx - 4, ty], [tx - 4, ty + 6], [tx + 4, ty + 6], [tx + 4, ty]]); t.beginPath(); t.ellipse(X(tx), Y(ty + 6), 4 * U, 1.4 * U, 0, 0, 7); t.stroke(); }
+    // 鐵皮屋頂：一格一格、高低不齊
+    for (let k = -84; k < 86; k += 12) { if (k > -10 && k < 6) continue; const h = 15 + ((k * 7) & 3);
+      bldg(k, 0, 12, h, { floor: 30, cols: 0 }); t.strokeStyle = LINE; lw(.75); path([[k - 1, h], [k + 13, h + 2]]); }
+    // 巷口：小山牆與黃色招牌
+    t.strokeStyle = LINE; lw(1); path([[-10, 0], [-10, 18], [-2, 24], [6, 18], [6, 0]]);
+    t.fillStyle = 'rgba(240,212,74,.55)'; t.fillRect(X(-9), Y(17), 14 * U, 6 * U); t.strokeStyle = 'rgba(240,212,74,.95)'; lw(.8); t.strokeRect(X(-9), Y(17), 14 * U, 6 * U);
+    // 紅磚老樓
+    bldg(14, 0, 22, 46, { floor: 11, cols: 1 });
+    t.strokeStyle = SOFT; lw(.6); for (let k = 1; k < 4; k++) path([[13, 11 * k + 6], [37, 11 * k + 6]]);
+    t.strokeStyle = LINE; lw(.8); path([[37, 22], [40, 22], [40, 40], [37, 40]]);
+
+    /* 社子島 */
+    ox = W * .85;
+    for (let k = 0; k < 9; k++) { const x0 = -120 + k * 21, h = 18 + (k * 7) % 11; bldg(x0, 14, 19, h, { floor: 30, cols: 0 }); t.strokeStyle = LINE; lw(.8); path([[x0 - 1, 14 + h], [x0 + 9.5, 14 + h + 7], [x0 + 20, 14 + h]]); }
+    t.strokeStyle = LINE; lw(1.1); path([[-132, 0], [-124, 16], [128, 16], [136, 0]], false, true);
+    t.strokeStyle = SOFT; lw(.6); seg(-126, 11, 130, 11);
+    t.fillStyle = 'rgba(132,196,140,.45)'; t.fillRect(X(-96), Y(13), 26 * U, 5 * U); t.fillRect(X(-40), Y(13), 26 * U, 5 * U);
+    const TOPX = 92, TOPY = 152;
+    t.strokeStyle = LINE; lw(1.3); seg(74, 0, TOPX, TOPY); seg(80, 0, TOPX + 3, TOPY);
+    lw(1.1); seg(30, 32, 150, 32); seg(30, 28, 150, 28);
+    t.strokeStyle = SOFT; lw(.55);
+    for (let k = 0; k < 7; k++) { const hy = TOPY - 8 - k * 9, hx = 74 + (TOPX - 74) * (hy / TOPY); seg(hx, hy, 36 + k * 5, 32); seg(hx + 3, hy, 146 - k * 7, 32); }
+    return c;
+  }
+  // 倒影：同一張線稿染成深色，畫在白鐵台面上才看得見
+  function makeGhost(src) {
+    const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+    const g = c.getContext('2d'); g.drawImage(src, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#d9deea'; g.fillRect(0, 0, c.width, c.height);
+    return c;
+  }
+
+
+  function size() {
+    W = cv.width = Math.round(cv.clientWidth * DPR); H = cv.height = Math.round(cv.clientHeight * DPR);
+    CW = cc.width = Math.round(cc.clientWidth * DPR); CH = cc.height = Math.round(cc.clientHeight * DPR);
+    s = 11; art = makeArt(); ghost = makeGhost(art);
+    stars = Array.from({ length: 150 }, () => [r() * W, r() * H * .7, r()]);
+  }
+  size(); addEventListener('resize', size);
+  const ease = v => v <= 0 ? 0 : v >= 1 ? 1 : 1 - Math.pow(1 - v, 3);
+
+  /* 地平線：游標在海上就往下退（海市變大），在市場就往上收（看見巷口） */
+  let hz = .5, hzT = .5, pin = 0;
+  const sea = $('sea'), mkt = $('mkt');
+  const toSea = () => { hzT = .6; pin = 1; }, toMkt = () => { hzT = .4; pin = -1; }, rest = () => { hzT = .5; pin = 0; };
+  if (!touch) {
+    addEventListener('pointermove', e => { const k = e.clientY / innerHeight; if (k < hz - .02) toSea(); else if (k > hz + .02) toMkt(); });
+    document.documentElement.addEventListener('pointerleave', rest);
+  }
+  sea.addEventListener('focus', toSea); mkt.addEventListener('focus', toMkt);
+  sea.addEventListener('blur', rest); mkt.addEventListener('blur', rest);
+  // 地平線以下的地方都屬於市場：點在線下（包括「市」和它的說明）就走進市場
+  const els = { sky: $('skyL'), wet: $('wetL'), hz: $('hz'), hai: $('gHai'), shi: $('gShi'), ls: $('labSea'), lm: $('labMkt'), rope: $('rope') };
+  const heat = document.getElementById('heatScale');
+
+  function layout(t) {
+    const dy = (hz - .5) * innerHeight;
+    const tr = `translate3d(0, ${dy.toFixed(1)}px, 0)`;
+    els.sky.style.transform = tr; els.wet.style.transform = tr; els.hz.style.transform = tr;
+    // 海市越近越大一點，市場越近字越穩
+    const k = (hz - .5) / .1;   // -1 市場 … 0 … 1 海
+    els.hai.style.transform = `${tr} scale(${(1 + Math.max(0, k) * .12).toFixed(3)})`;
+    els.hai.style.transformOrigin = '50% 100%';
+    els.shi.style.transform = `${tr} scale(${(1 + Math.max(0, -k) * .06).toFixed(3)})`;
+    els.ls.style.transform = tr; els.lm.style.transform = tr; els.rope.style.transform = tr;
+    mkt.style.clipPath = `inset(${(hz * 100).toFixed(2)}% 0 0 0)`;
+    if (heat && !reduce) heat.setAttribute('values', `${(2.5 + k).toFixed(1)};${(4.5 + k * 2).toFixed(1)};${(2.5 + k).toFixed(1)}`);
+  }
+
+  function draw(t) {
+    if (t0 === null) t0 = t;
+    const rise = reduce ? 1 : ease((t - t0 - 500) / 2400);
+    // 地平線慢慢跟上游標；沒有游標時（手機）自己輕輕呼吸
+    const idle = touch && !reduce && !pin ? Math.sin(t * .00035) * .025 : 0;
+    hz += (hzT + idle - hz) * (reduce ? 1 : .06);
+    hot += ((pin > 0 ? 1 : 0) - hot) * .05;
+    layout(t);
+
+    const g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#05080c'); g.addColorStop(.6, '#0e1820'); g.addColorStop(.92, '#25303f'); g.addColorStop(1, '#3a3b52');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    stars.forEach(([sx, sy, k]) => { x.fillStyle = `rgba(230,234,255,${.12 + .45 * k * (.6 + .4 * Math.sin(t * .001 + k * 30))})`; x.fillRect(sx, sy, DPR, DPR); });
+    const m = x.createRadialGradient(W * .78, H * .22, 0, W * .78, H * .22, H * .5);
+    m.addColorStop(0, 'rgba(230,232,245,.16)'); m.addColorStop(1, 'rgba(230,232,245,0)'); x.fillStyle = m; x.fillRect(0, 0, W, H);
+    // 一條一條橫切、左右晃，像隔著熱空氣看；游標在海上時晃得更兇
+    const th = art.height, step = DPR, amp = (1 + hot * 4) * DPR, lift = (1 - rise) * th * .18;
+    x.globalCompositeOperation = 'lighter';
+    for (let yy = 0; yy < th; yy += step) {
+      const kk = yy / th; if (kk < 1 - rise * 1.02) continue;
+      const off = Math.sin(yy * .09 / DPR + t * .0016) * amp * (1 - kk * .6) + Math.sin(yy * .023 / DPR - t * .0006) * amp * .5;
+      x.globalAlpha = Math.min(1, Math.pow(kk, .7) * (.62 + hot * .3)) * rise;
+      x.drawImage(art, 0, yy, W, step, off, H - th + yy + lift, W, step);
+    }
+    // 上現蜃景：樓臺上方，偶爾浮出一個倒過來的影子
+    const fl = reduce ? .5 : Math.max(0, Math.sin(t * .00031) * .5 + Math.sin(t * .00083) * .35);
+    if (fl > .02) { const sq = .42 + Math.sin(t * .0004) * .12;
+      for (let yy = 0; yy < th; yy += step) {
+        const dst = H - th * .8 - yy * sq; if (dst < 0) break;         // 倒過來：樓臺的底在最上面，頂朝下對著真的樓臺
+        const off = Math.sin(yy * .11 / DPR + t * .002) * amp * 1.6;
+        x.globalAlpha = Math.pow(yy / th, 1.4) * .24 * fl * rise;
+        x.drawImage(art, 0, yy, W, step, off, dst, W, Math.max(1, step * sq));
+      } }
+    x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+    const v = x.createLinearGradient(0, H * .7, 0, H);
+    v.addColorStop(0, 'rgba(207,199,224,0)'); v.addColorStop(1, `rgba(207,199,224,${.14 + hot * .12})`);
+    x.fillStyle = v; x.fillRect(0, H * .7, W, H * .3);
+
+    // 線下：海市倒映在巷口濕濕的地上，一皺一皺
+    y2.clearRect(0, 0, CW, CH);
+    const depth = Math.min(CH * .7, th * .8), sqz = depth / th;
+    for (let yy = 0; yy < depth; yy += step) {
+      const kk = yy / depth, src = th - 1 - Math.floor(yy / sqz); if (src < 0) break;
+      const off = Math.sin(yy * .22 / DPR + t * .0022) * (1.5 + kk * 6) * DPR;
+      y2.globalAlpha = (1 - kk) * (1 - kk) * .55 * rise;
+      y2.drawImage(ghost, 0, src, W, 1, off, yy, CW, step);
+    }
+    y2.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

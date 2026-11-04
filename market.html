@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>海市・走進龍口市場的一個攤位</title>
+<meta name="description" content="海市是龍口市場裡的一個攤位：四塊冰在秤上慢慢化，各投著一個地方的照片。這攤不收錢，用你離開過的一個地方，換走一袋融水。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23f0d44a'/%3E%3Ctext x='32' y='47' text-anchor='middle' font-size='42' font-weight='900' fill='%23c4362c' font-family='serif'%3E海%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=LXGW+WenKai+TC:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/base.css">
+<style>
+/* 走進市場。
+   整頁從巷口那塊黃底紅字的招牌開始：「海市」兩個字像招牌一樣大，慢慢從一張巷子的照片前滑過。
+   往下捲，走進巷子；然後是一段一段的市場：四扇鐵捲門、走讀撿到的價牌、攤上的五件事、帳簿的紅繩，最後招牌再掛一次。
+   兩種字：明體（Noto Serif TC）做標題和內文，楷體（霞鶩文楷）只給叫賣、價牌和紙條。
+   紅色只給市場：招牌的字、唯一的動作按鈕、紅繩、「不賣」的印。 */
+:root {
+  --ground: #dfe4d8;     /* 透光浪板漏下來的光 */
+  --paper: #f3f4f0;      /* 白鐵攤台 */
+  --ink: #1d2826;
+  --muted: #4a5955;
+  --dark: #1b2422;       /* 巷子裡的暗 */
+  --dark-2: #243030;
+  --on-dark: #e6eadf;
+  --on-dark-2: #a9b4ac;
+  --board: #f0d44a;      /* 「龍口市場」招牌的黃 */
+  --red: #c4362c;
+  --red-2: #a52b22;
+  --shut-1: #2c3d4c; --shut-2: #3e5568; --shut-3: #5b7389; --shut-4: #8ea2b3; --shut-5: #c3d0da;   /* 鐵捲門的藍，由暗到亮 */
+
+  --f-myth: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --f-hand: "LXGW WenKai TC", "Kaiti TC", "DFKai-SB", serif;
+
+  /* 五個字級 */
+  --t-mono: clamp(150px, 17vw, 290px);
+  --t-h: clamp(34px, 4.2vw, 60px);
+  --t-st: clamp(24px, 2.5vw, 36px);      /* 一句話：最大 36px */
+  --t-lead: clamp(20px, 1.75vw, 25px);
+  --t-body: 17px;
+  --t-small: 14px;
+
+  --m: clamp(20px, 2.6vw, 40px);         /* 唯一一組左右邊界 */
+  --gap: clamp(96px, 12vw, 200px);       /* 段與段之間 */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  /* 質感：只用市場裡真的有的材料，紙的纖維、招牌的漆 */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .18 0 0 0 0 .12 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  --enamel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.6' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .05 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+}
+html { background: var(--dark); scroll-padding-top: 64px; }
+body { background: var(--ground); color: var(--ink); overflow-x: hidden; font-family: var(--f-myth); font-size: var(--t-body); line-height: 1.75; }
+::selection { background: var(--board); color: var(--red); }
+img { display: block; max-width: 100%; }
+h1, h2, h3 { margin: 0; font-weight: 900; }
+p { margin: 0; }
+.sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.skip { position: fixed; left: var(--m); top: 10px; z-index: 60; background: var(--board); color: var(--red-2); padding: 8px 14px; font-weight: 600; transform: translateY(-160%); transition: transform .2s; }
+.skip:focus { transform: none; }
+.wrap { padding-inline: max(var(--m), env(safe-area-inset-left, 0px)) max(var(--m), env(safe-area-inset-right, 0px)); }
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2vw, 32px); }
+.grid > * { min-width: 0; }
+
+/* 進場：每段的標題、文字、圖片依序浮上來。沒有 JS 時一律直接顯示 */
+.js [data-rise] { opacity: 0; translate: 0 24px; transition: opacity .8s var(--ease), translate .8s var(--ease); transition-delay: calc(var(--d, 0) * 75ms); }
+.js [data-rise].in { opacity: 1; translate: 0 0; }
+
+/* 頂上的橫樑：深綠鋼樑，一條平的橫條 */
+.beam { position: fixed; inset: 0 0 auto 0; z-index: 40; background: var(--dark); color: var(--on-dark); padding-top: env(safe-area-inset-top, 0px); }
+.beam .in { display: flex; align-items: center; gap: 32px; height: 56px; }
+.beam .logo { font-weight: 900; font-size: var(--t-lead); letter-spacing: .3em; text-decoration: none; margin-right: 8px; }
+.beam nav { display: flex; gap: 26px; flex: 1; font-size: var(--t-small); }
+.beam nav a, .foot-links a { position: relative; text-decoration: none; padding: 4px 0; }
+.beam nav a::after, .foot-links a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--board); transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease); }
+.beam nav a:hover::after, .beam nav a[aria-current="true"]::after, .foot-links a:hover::after { transform: scaleX(1); }
+.beam nav a { color: var(--on-dark-2); transition: color .25s; } .beam nav a:hover, .beam nav a[aria-current="true"] { color: var(--on-dark); }
+.beam .to3d { font-family: var(--f-hand); font-weight: 700; font-size: var(--t-body); text-decoration: none; background: var(--board); color: var(--red-2); padding: 6px 16px 5px; white-space: nowrap; transition: transform .25s var(--ease), background .25s; }
+.beam .to3d:hover { transform: translateY(-2px); background: #f6df6a; }
+.beam .to3d:active { transform: translateY(1px); }
+.beam .menu { display: none; font: inherit; font-size: var(--t-body); color: var(--on-dark); background: none; border: 0; padding: 8px 0 8px 12px; cursor: pointer; }
+
+/* ===== 第一屏：招牌 ===== */
+.hero { background-image: var(--enamel); --by: clamp(270px, 41svh, 410px); --sq: clamp(220px, 19vw, 300px); position: relative; height: 100svh; min-height: 680px; background: var(--board); color: var(--red); overflow: hidden; }
+.hero h1 { position: absolute; inset: 0; pointer-events: none; font-size: var(--t-mono); line-height: 1; letter-spacing: -.02em; }
+.line { position: absolute; left: 0; top: var(--by); translate: 0 -50%; display: flex; width: max-content; white-space: nowrap; animation: slide var(--dur, 34s) linear infinite; }
+.line span { padding-right: .32em; }
+.line span::after { content: ""; display: inline-block; width: .16em; height: .16em; border-radius: 50%; background: currentColor; margin-left: .32em; vertical-align: .3em; }
+@keyframes slide { to { transform: translateX(-50%); } }
+.hero:hover .line { animation-play-state: paused; }
+.hero .sq { position: absolute; left: calc(50% - var(--sq) / 2); top: calc(var(--by) - var(--sq) / 2); width: var(--sq); height: var(--sq); overflow: hidden; background: var(--dark); }
+.hero .sq img { width: 100%; height: 100%; object-fit: cover; animation: breathe 22s ease-in-out infinite alternate; }
+@keyframes breathe { from { transform: scale(1.02); } to { transform: scale(1.14) translateX(-3%); } }
+/* 同一行字再疊一次，裁在照片的方框裡，經過照片的字變成招牌的黃 */
+.hero .over { position: absolute; left: calc(50% - var(--sq) / 2); top: calc(var(--by) - var(--sq) / 2); width: var(--sq); height: var(--sq); overflow: hidden; color: var(--board); font-size: var(--t-mono); line-height: 1; letter-spacing: -.02em; font-weight: 900; pointer-events: none; }
+.hero .over .line { left: calc(var(--sq) / 2 - 50vw); top: calc(var(--sq) / 2); }
+.hero .copy { position: absolute; left: 50%; top: calc(var(--by) + var(--sq) / 2 + 48px); translate: -50% 0; width: min(38em, calc(100% - 2 * var(--m))); text-align: center; color: var(--ink); }
+.hero .copy p:first-child { font-size: var(--t-lead); line-height: 1.6; font-weight: 600; max-width: 25em; margin: 0 auto; }
+.hero .copy p + p { margin-top: 18px; font-size: var(--t-body); }
+.hero .foot { position: absolute; left: 0; right: 0; bottom: 36px; display: flex; justify-content: space-between; align-items: end; gap: 20px; color: var(--ink); }
+.hero .foot p { font-size: var(--t-body); }
+.btn { display: inline-flex; align-items: center; gap: .6em; font-family: var(--f-hand); font-weight: 700; font-size: var(--t-lead); letter-spacing: .08em; background: var(--red); color: #fff; border: 0; padding: 12px 24px 11px; cursor: pointer; text-decoration: none; transition: transform .3s var(--ease), background .3s; }
+.btn::after { content: "→"; font-family: var(--f-myth); transition: transform .3s var(--ease); }
+.btn:hover { background: var(--red-2); transform: translateY(-2px); }
+.btn:hover::after { transform: translateX(5px); }
+.btn:active { transform: translateY(1px); }
+
+/* ===== 走進巷子 ===== */
+.walk { position: relative; height: 210vh; background: #161b1d; }
+.walk .stage { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.walk svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transform-origin: 46.7% 53%; will-change: transform; }
+.walk .tube { opacity: .12; }
+.walk.lit .tube { animation: flick 1.1s steps(1, end) forwards; animation-delay: calc(var(--i) * 170ms + 250ms); }
+@keyframes flick { 0% { opacity: .12; } 12% { opacity: 1; } 20% { opacity: .2; } 32% { opacity: .9; } 40% { opacity: .35; } 55%, 100% { opacity: 1; } }
+.walk .glowline { opacity: 0; transition: opacity 1.4s ease .9s; }
+.walk.lit .glowline { opacity: 1; }
+.walk .sign { transform-box: fill-box; transform-origin: 50% 0; transform: translateY(-140%); }
+.walk.lit .sign { animation: hangOn 2.6s cubic-bezier(.3,.7,.3,1) .4s forwards; }
+@keyframes hangOn { 0% { transform: translateY(-140%) rotate(0); } 28% { transform: translateY(0) rotate(5deg); } 46% { transform: rotate(-3.2deg); } 62% { transform: rotate(1.8deg); } 78% { transform: rotate(-.8deg); } 100% { transform: rotate(0); } }
+.walk .shade { position: absolute; inset: 0; background: #12171a; opacity: var(--shade, 0); pointer-events: none; }
+.walk .lede { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 28px; padding-inline: var(--m); text-align: center; color: var(--on-dark); opacity: var(--lo, 0); translate: 0 var(--ly, 30px); pointer-events: none; }
+.walk .lede h2 { font-size: clamp(52px, 7.4vw, 120px); line-height: 1.05; letter-spacing: .04em; color: var(--board); white-space: nowrap; }
+.walk .lede p { font-size: var(--t-lead); line-height: 1.7; max-width: 22em; }
+.walk .lede cite { display: block; font-style: normal; font-size: var(--t-small); color: var(--on-dark-2); margin-top: 6px; }
+.walk .cap { position: absolute; left: var(--m); bottom: 24px; color: var(--on-dark); font-size: var(--t-small); opacity: calc(.85 - var(--lo, 0)); }
+
+/* ===== 段落共用 ===== */
+.sec { padding-block: var(--gap); position: relative; }
+.sec.dark { background: var(--dark); color: var(--on-dark); }
+.sec.paper { background: var(--paper) var(--paper-grain); }
+.h2 { font-size: var(--t-h); line-height: 1.15; letter-spacing: .04em; }
+.lead { font-size: var(--t-lead); line-height: 1.65; }
+figure { margin: 0; }
+figcaption { font-size: var(--t-small); color: var(--muted); margin-top: 12px; }
+.dark figcaption { color: var(--on-dark-2); }
+
+/* ===== 海市是什麼 ===== */
+.about .top { align-items: end; }
+.about .top .h2 { grid-column: 1 / 7; }
+.about .top .note { grid-column: 9 / 13; }
+.facts { display: flex; justify-content: space-between; gap: 32px; margin-top: clamp(80px, 9vw, 130px); }
+.facts div { min-width: 0; }
+.facts b { display: block; font-size: var(--t-h); font-weight: 400; line-height: 1.1; letter-spacing: .02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.facts span { display: block; font-size: var(--t-small); color: var(--muted); margin-top: 10px; max-width: 14em; }
+.about .rest { margin-top: clamp(80px, 9vw, 130px); align-items: start; }
+.about .rest .prose { grid-column: 1 / 6; display: grid; gap: 1.2em; }
+.about .rest figure { grid-column: 7 / 13; }
+.about .rest img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+
+/* ===== 四個場域：一排不等寬的鐵捲門 ===== */
+.sites .h2 { margin-left: calc((100% - 2 * var(--m)) / 6); }
+.sites .h2 + p { margin: 22px 0 0 calc((100% - 2 * var(--m)) / 6); max-width: 30em; color: var(--on-dark-2); }
+.doors { display: flex; height: 68svh; min-height: 440px; margin-top: 64px; }
+.door { --g: 2; all: unset; box-sizing: border-box; position: relative; flex: var(--g) 1 0; min-width: 0; overflow: hidden; cursor: pointer; background: var(--dark-2); transition: flex-grow .6s var(--ease); }
+.door[aria-selected="true"] { --g: 5; }
+@media (hover: hover) { .door:not([aria-selected="true"]):hover { --g: 3; } }
+.door img, .door canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.7); transition: transform 1.2s var(--ease); }
+.door:not([aria-selected="true"]) img { transform: translateY(-30%) scale(1.06); filter: saturate(.6) brightness(.85); }
+.door[aria-selected="true"] img { transform: scale(1.04); }
+.door .shut { position: absolute; inset: 0; background-color: var(--c); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='18'%3E%3Crect y='14' width='8' height='3' fill='%23000' fill-opacity='.22'/%3E%3Crect y='17' width='8' height='1' fill='%23fff' fill-opacity='.08'/%3E%3C/svg%3E"); transition: transform .95s cubic-bezier(.65,0,.25,1); }
+.door .shut::after { content: ""; position: absolute; left: 50%; bottom: 22px; width: 40px; height: 8px; margin-left: -20px; background: #233034; }
+.door .shut { transform: translateY(34%); }
+.door:not([aria-selected="true"]):hover .shut { transform: translateY(24%); }
+.door[aria-selected="true"] .shut { transform: translateY(-101%); }
+
+.door .scrim { /* taste-skill-ignore: neutral scrim behind the label on a photo */ position: absolute; left: 0; top: 0; width: 100%; height: 50%; background: linear-gradient(rgba(14,18,18,.6), rgba(14,18,18,0)); opacity: 0; transition: opacity .5s .35s; }
+.door[aria-selected="true"] .scrim { opacity: 1; }
+.door .label { position: absolute; left: 24px; top: 22px; right: 16px; z-index: 2; color: var(--paper); }
+.door .label b { display: inline-block; font-size: var(--t-lead); font-weight: 900; letter-spacing: .14em; line-height: 1.2; background: var(--paper); color: #1f4f9a; padding: 4px 10px 4px 14px; transition: background .4s, color .4s; }
+.door[aria-selected="true"] .label b { background: var(--board); color: var(--red); }
+.door .label span { display: block; margin-top: 10px; font-size: var(--t-small); max-width: 26em; opacity: 0; transition: opacity .4s .5s; }
+.door[aria-selected="true"] .label span { opacity: 1; }
+.door:focus-visible { outline: 3px solid var(--board); outline-offset: -3px; }
+
+.panel { scroll-margin-top: 80px; margin-top: clamp(64px, 7vw, 110px); align-items: start; row-gap: 56px; }
+.panel .head { grid-column: 1 / 8; }
+.panel .head h3 { font-size: var(--t-h); letter-spacing: .1em; line-height: 1.1; }
+.panel .head .where { margin-top: 12px; color: var(--on-dark-2); }
+.panel .head .call { margin-top: 26px; font-family: var(--f-hand); font-size: var(--t-lead); color: var(--board); }
+.panel .dial { grid-column: 9 / 13; justify-self: end; display: grid; grid-template-columns: auto auto; align-items: center; gap: 20px; }
+.panel .dial svg { width: 150px; height: auto; }
+.panel .dial b { display: block; font-size: var(--t-h); font-weight: 400; line-height: 1; font-variant-numeric: tabular-nums; }
+.panel .dial span { display: block; font-size: var(--t-small); color: var(--on-dark-2); margin-top: 8px; }
+.panel dl { grid-column: 1 / 6; margin: 0; display: grid; gap: 30px; }
+.panel dt { font-weight: 600; color: var(--board); margin-bottom: 4px; }
+.panel dd { margin: 0; }
+.panel .see3d { color: var(--on-dark); text-underline-offset: 6px; }
+.panel .see3d:hover { color: var(--board); }
+.panel .ph { grid-column: 7 / 13; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.4vw, 20px); }
+.panel .ph.one figure, .panel .ph.odd figure:first-child { grid-column: 1 / -1; }
+.panel .ph img, .panel .ph canvas { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; filter: saturate(.7); }
+.panel .ph.one img, .panel .ph.one canvas, .panel .ph.odd figure:first-child img { aspect-ratio: 3 / 2; }
+.needle { transform-origin: 75px 80px; transition: transform 1.2s cubic-bezier(.25,1.6,.4,1); }
+
+/* ===== 走讀撿到的：一張價牌表，全部同一個字級 ===== */
+.walked .intro { align-items: end; }
+.walked .intro .h2 { grid-column: 1 / 7; }
+.walked .intro p { grid-column: 8 / 13; }
+.walked table { width: 100%; border-collapse: collapse; margin-top: clamp(56px, 6vw, 96px); font-size: var(--t-lead); line-height: 1.5; }
+.walked th[scope="rowgroup"] { position: sticky; top: 56px; z-index: 1; background: var(--paper) var(--paper-grain); text-align: left; font-weight: 900; color: var(--red); letter-spacing: .14em; padding: 72px 0 20px; }
+.walked tbody:first-of-type th[scope="rowgroup"] { padding-top: 0; }
+.walked td, .walked th[scope="row"] { vertical-align: top; padding: 0 0 .9em; text-align: left; font-weight: 400; }
+.walked th[scope="row"] { width: 30%; padding-right: 3%; font-family: var(--f-hand); font-weight: 700; }
+.walked td.no { width: 4.2em; text-align: right; }
+.stamp { display: inline-grid; place-items: center; width: 2.6em; height: 2.6em; border-radius: 50%; background: var(--red); color: var(--paper); font-family: var(--f-hand); font-weight: 700; font-size: var(--t-small); rotate: -12deg; translate: 0 -.3em; }
+.walked tr:hover .stamp { rotate: 8deg; transition: rotate .4s var(--ease); }
+.walked .jump { margin-left: .8em; font-family: var(--f-myth); font-weight: 400; font-size: var(--t-small); letter-spacing: 0; color: var(--ink); text-underline-offset: 5px; }
+.walked .jump:hover { color: var(--red); }
+
+/* ===== 龍口的攤位：五件事，由暗到亮 ===== */
+.roof { margin: calc(-1 * var(--gap)) calc(-1 * var(--m)) var(--gap); position: relative; height: 72svh; min-height: 420px; overflow: hidden; background: #0d0f0f; }
+.roof img { width: 100%; height: 118%; object-fit: cover; object-position: 50% 40%; translate: 0 var(--py, -6%); will-change: translate; }
+.roof figcaption { position: absolute; left: var(--m); bottom: 20px; margin: 0; color: var(--on-dark); }
+.stall .intro { align-items: start; }
+.stall .intro .h2 { grid-column: 1 / 6; }
+.stall .intro .say { grid-column: 7 / 12; display: grid; gap: 28px; }
+.stall .intro .say > p:first-child { font-family: var(--f-hand); font-size: var(--t-lead); line-height: 1.75; }
+.facts2 { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 8px 16px; margin: 0; }
+.facts2 dt { font-weight: 600; }
+.facts2 dd { margin: 0; }
+.steps { display: flex; height: 540px; margin-top: 64px; }
+.step { position: relative; flex: 1 1 0; min-width: 0; overflow: hidden; background: var(--bg); color: var(--fg); transition: flex-grow .5s var(--ease); }
+.step.open { flex-grow: 7.5; }
+.step > button { all: unset; box-sizing: border-box; position: absolute; inset: 0; cursor: pointer; }
+.step > button:focus-visible { outline: 3px solid var(--board); outline-offset: -5px; }
+.step .tab { position: absolute; left: 22px; bottom: 26px; writing-mode: vertical-rl; font-weight: 900; font-size: var(--t-lead); letter-spacing: .2em; transition: opacity .3s; }
+.step.open .tab { opacity: 0; }
+@media (hover: hover) { .step:not(.open):hover { flex-grow: 1.5; } }
+.step .body { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding: 36px 40px 40px; opacity: 0; visibility: hidden; transition: opacity .4s; min-width: 640px; }
+.step.open .body { opacity: 1; visibility: visible; transition-delay: .25s; }
+.step .body .t { display: flex; flex-direction: column; justify-content: space-between; }
+.step .body.solo { grid-template-columns: minmax(0, 1fr); }
+.step .body.solo p { font-size: var(--t-st); line-height: 1.5; max-width: 13em; font-weight: 600; }
+.step .body h3 { font-size: var(--t-h); letter-spacing: .1em; line-height: 1.2; }
+.step .body p { font-size: var(--t-lead); line-height: 1.7; max-width: 15em; }
+.step .body img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.75); }
+.stall .qr { margin-top: 24px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.stall .qr a { color: var(--ink); text-underline-offset: 5px; }
+.stall .qr a:hover { color: var(--red); }
+
+/* ===== 帳簿：你寫的地方就是這段最大的字 ===== */
+.ledger { min-height: 100svh; display: flex; flex-direction: column; }
+.ledger .top { align-items: start; }
+.ledger .top .h2 { grid-column: 1 / 7; }
+.ledger .top p { grid-column: 8 / 13; color: var(--on-dark-2); }
+.ledger form { margin-top: clamp(48px, 6vw, 90px); }
+.ledger label { display: block; font-size: var(--t-small); color: var(--on-dark-2); }
+.ledger .place { display: block; width: 100%; margin-top: 8px; font: 900 clamp(54px, 8.4vw, 140px)/1.15 var(--f-myth); letter-spacing: .02em; color: var(--board); background: none; border: 0; padding: 0 0 6px; caret-color: var(--red); }
+.ledger .place::placeholder { color: #66746f; }
+.ledger .place:focus { outline: none; }
+.ledger .place:focus-visible { outline: 3px solid var(--board); outline-offset: 8px; }
+.ledger .row2 { margin-top: 36px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px 56px; align-items: start; }
+.ledger textarea { display: block; width: 100%; min-height: 3.6em; margin-top: 8px; font: 400 var(--t-lead)/1.6 var(--f-myth); color: var(--on-dark); background: var(--dark-2); border: 0; padding: 14px 18px; resize: vertical; }
+.ledger textarea::placeholder { color: #95a19b; }
+.ledger textarea:focus-visible { outline: 3px solid var(--board); outline-offset: 2px; }
+.scale { display: grid; grid-template-columns: 150px auto; gap: 22px; align-items: center; }
+.scale svg { width: 150px; height: auto; }
+.scale b { display: block; font-size: var(--t-h); font-weight: 400; line-height: 1; font-variant-numeric: tabular-nums; }
+.scale span { display: block; font-size: var(--t-small); color: var(--on-dark-2); margin-top: 8px; max-width: 12em; }
+.scale.enough span { color: var(--board); }
+.ledger .send { margin-top: 28px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.done { color: var(--on-dark); }
+
+.rope-wrap { margin-top: auto; padding-top: clamp(80px, 9vw, 140px); }
+.rope-wrap h3 { font-size: var(--t-lead); font-weight: 600; letter-spacing: .1em; }
+.rope { position: relative; display: flex; gap: 40px 18px; flex-wrap: wrap; list-style: none; margin: 26px 0 0; padding: 34px 0 0; }
+.rope::before { content: ""; position: absolute; left: calc(-1 * var(--m)); right: calc(-1 * var(--m)); top: 10px; height: 3px; background: var(--red); }
+.rope li { width: min(240px, 100%); background: var(--paper) var(--paper-grain); color: var(--ink); padding: 16px 18px 14px; font-family: var(--f-hand); position: relative; transform-origin: 50% -22px; rotate: var(--r, -1.4deg); transition: rotate .5s var(--ease); }
+.rope li:nth-child(even) { --r: 1.2deg; } .rope li:nth-child(3n) { --r: -.4deg; }
+.rope li:hover { rotate: 0deg; }
+.rope li::before { content: ""; position: absolute; top: -26px; left: 50%; width: 9px; height: 20px; margin-left: -4.5px; background: #9aa5a3; }
+.rope li.drop { animation: drop 1.4s cubic-bezier(.3,.7,.3,1) both; }
+@keyframes drop { 0% { transform: translateY(-40px) rotate(0); opacity: 0; } 30% { transform: translateY(0) rotate(9deg); opacity: 1; } 52% { transform: rotate(-5deg); } 72% { transform: rotate(2.4deg); } 100% { transform: none; } }
+.rope .pl { font-size: var(--t-lead); font-weight: 700; line-height: 1.4; }
+.rope .wd { font-size: var(--t-body); line-height: 1.6; margin-top: 4px; overflow-wrap: anywhere; }
+.rope .mt { font-family: var(--f-myth); font-size: var(--t-small); color: var(--muted); display: flex; flex-wrap: wrap; gap: 0 12px; justify-content: space-between; margin-top: 10px; }
+.rope .ex { color: var(--red); }
+
+/* ===== 收攤：招牌再掛一次 ===== */
+footer { background: var(--board) var(--enamel); color: var(--ink); padding-top: clamp(96px, 11vw, 170px); overflow: hidden; }
+footer .last { grid-column: 1 / 9; font-size: var(--t-st); font-weight: 600; line-height: 1.6; max-width: 17em; }
+footer .cols { margin-top: clamp(72px, 8vw, 120px); align-items: start; row-gap: 48px; }
+footer .places { grid-column: 1 / 6; list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+footer .places a { font-size: var(--t-h); font-weight: 900; letter-spacing: .12em; color: var(--red); text-decoration: none; display: inline-block; transition: transform .35s var(--ease); }
+footer .places a:hover { transform: translateX(10px); }
+footer .foot-links { grid-column: 7 / 9; display: grid; gap: 8px; align-content: start; font-size: var(--t-body); }
+footer .credits { grid-column: 9 / 13; font-size: var(--t-small); line-height: 1.7; }
+footer .credits h3 { font-size: var(--t-small); font-weight: 600; margin-bottom: 8px; }
+footer .credits ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+footer .credits a { color: inherit; text-underline-offset: 3px; }
+footer .legal { margin-top: 80px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-size: var(--t-small); }
+footer .legal a { color: inherit; text-underline-offset: 4px; }
+footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; font-weight: 900; letter-spacing: -.02em; color: var(--red); white-space: nowrap; height: .62em; overflow: hidden; text-align: center; user-select: none; }
+
+@media (max-width: 1000px) {
+  .about .top .h2, .about .top .note, .about .rest .prose, .about .rest figure,
+  .panel .head, .panel .dial, .panel dl, .panel .ph, .walked .intro .h2, .walked .intro p,
+  .stall .intro .h2, .stall .intro .say, .ledger .top .h2, .ledger .top p,
+  footer .last, footer .places, footer .foot-links, footer .credits { grid-column: 1 / -1; }
+  .about .top .note, .walked .intro p, .ledger .top p, .stall .intro .say { margin-top: 24px; }
+  .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 24px; }
+  .about .rest { row-gap: 48px; }
+  .panel .dial { justify-self: start; }
+  .sites .h2, .sites .h2 + p { margin-left: 0; }
+  footer .foot-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .beam nav { display: none; position: absolute; top: 56px; left: 0; right: 0; flex-direction: column; gap: 0; background: var(--dark); padding: 8px var(--m) 18px; font-size: var(--t-body); }
+  .beam nav.open { display: flex; }
+  .beam nav a { padding: 12px 0; } .beam nav a::after { bottom: 6px; right: auto; width: 3em; }
+  .beam .in { gap: 14px; } .beam .logo { flex: 1; }
+  .beam .menu { display: block; }
+  .beam .to3d { font-size: var(--t-small); padding: 5px 12px 4px; }
+  .hero { background-image: var(--enamel); --by: 30svh; --sq: 46vw; --t-mono: 34vw; min-height: 620px; }
+  .hero .copy { top: calc(var(--by) + var(--sq) / 2 + 40px); }
+  .hero .copy p:first-child { font-size: var(--t-lead); }
+  .hero .copy p + p { font-size: var(--t-body); }
+  .hero .foot { flex-direction: column; align-items: stretch; bottom: 20px; gap: 14px; }
+  .hero .foot p { font-size: var(--t-small); }
+  .hero .btn { justify-content: center; }
+  .walk { height: 180vh; }
+  .walk .lede h2 { font-size: 12.4vw; }
+  .walk .lede p { font-size: var(--t-lead); }
+  .doors { flex-wrap: wrap; height: 84svh; min-height: 520px; }
+  .door { flex: 0 0 36%; height: 50%; transition: none; }
+  .door:nth-child(1), .door:nth-child(4) { flex-basis: 64%; }
+  .door[aria-selected="true"] { --g: 2; }
+  .door .label { left: 14px; top: 14px; } .door .label b { font-size: var(--t-lead); padding: 3px 8px 3px 10px; } .door .label span { display: none; }
+  .panel .dial svg { width: 110px; }
+  .walked table, .walked tbody, .walked tr, .walked th, .walked td { display: block; width: auto !important; }
+  .walked tr { position: relative; padding: 0 3.6em 18px 0; }
+  .walked th[scope="row"] { font-size: var(--t-lead); padding: 0; }
+  .walked td { font-size: var(--t-body); padding: 4px 0 0; color: var(--muted); }
+  .walked td.no { position: absolute; right: 0; top: 0; padding: 0; }
+  .walked th[scope="rowgroup"] { padding: 56px 0 16px; font-size: var(--t-lead); }
+  .steps { flex-direction: column; height: auto; }
+  .step { flex: none; min-height: 64px; transition: none; }
+  .step > button { position: relative; display: block; inset: auto; min-height: 64px; padding: 0 20px; }
+  .step .tab { position: static; writing-mode: horizontal-tb; font-size: var(--t-lead); line-height: 64px; display: block; }
+  .step.open .tab { opacity: 1; }
+  .step .body { position: static; display: none; min-width: 0; grid-template-columns: minmax(0, 1fr); padding: 0 20px 24px; gap: 18px; opacity: 1; visibility: visible; }
+  .step.open .body { display: grid; }
+  .step .body h3 { display: none; }
+  .step .body p, .step .body.solo p { font-size: var(--t-body); max-width: none; font-weight: 400; }
+  .step .body img { height: auto; aspect-ratio: 3 / 2; }
+  .ledger .place { font-size: 13vw; }
+  .ledger .row2 { grid-template-columns: minmax(0, 1fr); }
+  .scale { grid-template-columns: 110px auto; } .scale svg { width: 110px; }
+  .ledger .send .btn { width: 100%; justify-content: center; }
+  footer .legal { margin-top: 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .line { animation: none; translate: calc(50vw - 25%) -50%; }
+  .hero .sq img { animation: none; }
+  .walk { height: auto; } .walk .stage { position: relative; height: 92vh; }
+  .walk .tube, .walk .glowline { opacity: 1 !important; }
+  .walk .sign { transform: none !important; }
+  .walk .lede { --lo: 1 !important; --ly: 0px !important; } .walk .shade { --shade: .74 !important; }
+  .js [data-rise] { opacity: 1; translate: none; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到內容</a>
+<header class="beam" id="beam">
+  <div class="in wrap">
+    <a class="logo" href="index.html" aria-label="海市，回到地平線">海市</a>
+    <button class="menu" type="button" id="menuBtn" aria-expanded="false" aria-controls="nav">目錄</button>
+    <nav aria-label="頁內" id="nav">
+      <a href="#about">海市是什麼</a><a href="#sites">四個場域</a><a href="#walked">走讀撿到的</a><a href="#stall">龍口的攤位</a><a href="#ledger">帳簿</a>
+    </nav>
+    <a class="to3d" href="world.html">看見海市</a>
+  </div>
+</header>
+
+<section class="hero" aria-labelledby="h1">
+  <h1 id="h1"><span class="sr">海市</span><span class="line" aria-hidden="true" id="line"></span></h1>
+  <div class="sq"><img src="images/longkou/2.jpg" width="1024" height="681" alt="龍口市場又低又暗的巷子，兩旁拉下鐵捲門，盡頭有光" fetchpriority="high"></div>
+  <div class="over" aria-hidden="true"><span class="line" id="line2"></span></div>
+  <div class="copy">
+    <p>龍口市場裡的一個攤位。四塊冰在秤上慢慢化，這攤不收錢，用你離開過的一個地方，換走一袋融水。</p>
+    <p id="heroDate">12 月 5 日至 6 日，龍口市場〔日期與攤位待確認〕</p>
+  </div>
+  <div class="foot wrap">
+    <p>臺北中正區，汀州路一段149巷</p>
+    <a class="btn" href="#ledger">用一個地方換一袋水</a>
+  </div>
+</section>
+
+<section class="walk" id="walk" aria-labelledby="h-walk">
+  <div class="stage">
+    <svg id="aisleSvg" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" role="img" aria-label="龍口市場的巷子，從巷口往裡看，兩旁拉下鐵捲門，日光燈一盞一盞亮起，巷口掛著「海市」的牌子"></svg>
+    <div class="shade"></div>
+    <div class="lede">
+      <h2 id="h-walk">海旁蜃氣象樓臺</h2>
+      <p>古人說海上浮起來的城郭，是蜃吐出的氣。龍口市場的「龍口」，正好是一張龍的嘴。<cite>《史記・天官書》</cite></p>
+    </div>
+    <p class="cap">龍口市場，汀州路一段149巷進去的巷子。往下捲，往裡走。</p>
+  </div>
+</section>
+
+<main id="main">
+  <section class="sec about wrap" id="about" aria-labelledby="h-about">
+    <div class="grid top">
+      <h2 class="h2" id="h-about" data-rise>海市是什麼</h2>
+      <p class="note" data-rise style="--d:1">古人在海上看見浮起來的城郭和市井，看得見，卻不在它看起來的位置，越想靠近越到不了。</p>
+    </div>
+    <div class="facts" id="facts">
+      <div data-rise style="--d:2"><b>四塊冰</b><span>各投著一個地方的照片：龍口、雙溪、航空城、社子島</span></div>
+      <div data-rise style="--d:3"><b id="iceW">25.0 斤</b><span id="icePhase">一塊冰的重量，展期中照現場秤的數字往下掉</span></div>
+      <div data-rise style="--d:4"><b>1.5 斤</b><span>換一袋融水要秤到的重量，寫得越多越重</span></div>
+      <div data-rise style="--d:5"><b>0 元</b><span>這攤不收錢，只收一個你離開過的地方</span></div>
+    </div>
+    <div class="grid rest">
+      <div class="prose" data-rise>
+        <p>《史記・天官書》說那是蜃吐出的氣。蜃的樣子說法不一，有人說是大蛤，有人說是蛟龍一類。如果蜃樓是龍吐出來的氣，在龍口市場裡浮現的影像，就是從這裡吐出的一座海市。</p>
+        <p id="echoText"></p>
+        <p>市場是交換的地方。這個作品借用市場日常的秤重、叫賣和交換，讓地方的記憶不只被看見，也在人和人之間轉手。影像會慢慢散掉，但一個地方可以換成另一個人的地方，繼續留在市場裡。</p>
+      </div>
+      <figure data-rise style="--d:1">
+        <img src="images/found/ice-blocks-melting-in-an-old-oven.jpg" width="1400" height="933" alt="幾塊正在化的冰，表面濕亮，邊緣已經化圓" loading="lazy">
+        <figcaption>正在化的冰。攤上的四塊冰也會這樣，一天一天變小</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec dark sites" id="sites" aria-labelledby="h-sites">
+    <div class="wrap">
+      <h2 class="h2" id="h-sites" data-rise>四個場域</h2>
+      <p data-rise style="--d:1">以龍口市場為主要場域，把在雙溪、航空城和社子島的經驗帶進來，看它們和龍口有什麼共同的問題。</p>
+    </div>
+    <div class="doors" role="tablist" aria-label="四個場域" id="doors"></div>
+    <div class="wrap"><div class="grid panel" role="tabpanel" id="panel"></div></div>
+  </section>
+
+  <section class="sec paper walked wrap" id="walked" aria-labelledby="h-walked">
+    <div class="grid intro">
+      <h2 class="h2" id="h-walked" data-rise>走讀撿到的</h2>
+      <p data-rise style="--d:1">去雙溪和航空城走讀那幾天，路上看到、聽到的東西。秤不出重量，所以不賣。它們在 3D 海市裡也各立了一塊牌子。</p>
+    </div>
+    <table id="tags" data-rise style="--d:2"></table>
+  </section>
+
+  <section class="sec stall wrap" id="stall" aria-labelledby="h-stall">
+    <figure class="roof"><img src="images/longkou/4.jpg" width="1400" height="1050" alt="龍口市場的鐵皮屋頂，鋼架中間夾著一長條透光浪板，從下面被燈照亮" decoding="async"><figcaption>龍口市場的屋頂。攤就擺在這片鐵皮下面，Koza 拍攝</figcaption></figure>
+    <div class="grid intro">
+      <h2 class="h2" id="h-stall" data-rise>龍口的攤位</h2>
+      <div class="say" data-rise style="--d:1">
+        <p>四塊冰，四個我去過的地方。影像會隨著冰融掉，秤上的數字會一直往下掉。這個攤不收錢，請用你的一個地方，換走一袋水。</p>
+        <dl class="facts2">
+          <dt>時間</dt><dd id="showDate"></dd>
+          <dt>地點</dt><dd>龍口市場〔攤位位置待確認〕</dd>
+          <dt>攤上有</dt><dd>四塊冰、四台秤、投影、價牌、市場塑膠袋、紅繩</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="steps" id="steps"></div>
+    <p class="qr"><span>攤位旁會貼一張 QR 碼，掃了就到這個網站。</span><a href="world.html#longkou">到 3D 的攤上做一筆買賣</a></p>
+  </section>
+
+  <section class="sec dark ledger wrap" id="ledger" aria-labelledby="h-ledger">
+    <div class="grid top">
+      <h2 class="h2" id="h-ledger">帳簿</h2>
+      <p>換進攤上的地方都夾在下面這條紅繩上。在 3D 海市裡，每一個地方都會變成一座浮在海上的樓臺。</p>
+    </div>
+    <form id="trade" autocomplete="off">
+      <div><label for="place">一個你離開過的地方</label>
+      <input class="place" type="text" id="place" maxlength="16" required placeholder="外婆家的巷口"></div>
+      <div class="row2">
+        <div>
+          <label for="words">關於它，你還記得的一件事</label>
+          <textarea id="words" maxlength="100" required placeholder="下午三點會有賣豆花的腳踏車經過"></textarea>
+        </div>
+        <div class="scale" id="scale" aria-live="polite"></div>
+      </div>
+      <div class="send">
+        <button class="btn" type="submit">夾上繩子</button>
+        <p class="done" id="done" role="status"></p>
+      </div>
+    </form>
+    <div class="rope-wrap">
+      <h3>夾在繩上的地方</h3>
+      <ul class="rope" id="rope"></ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="grid"><p class="last" id="closing"></p></div>
+    <div class="grid cols">
+      <ul class="places" id="places"></ul>
+      <nav class="foot-links" aria-label="其他頁面">
+        <a href="world.html">看見海市（3D）</a>
+        <a href="index.html">回到地平線</a>
+        <a href="#about">海市是什麼</a>
+        <a href="#ledger">帳簿</a>
+      </nav>
+      <div class="credits">
+        <h3>照片</h3>
+        <ul id="credits"></ul>
+      </div>
+    </div>
+    <div class="legal">
+      <p>Koza（陳禹翰）於 2026 秋浪青計劃「街上故鄉」的個人作品。感謝龍口市場的攤商，與在雙溪、航空城、社子島遇見的人。</p>
+      <a href="#h1">回到招牌</a>
+    </div>
+  </div>
+  <div class="name" aria-hidden="true">海市</div>
+</footer>
+
+<script>document.documentElement.classList.add('js');</script>
+<script src="js/data.js"></script>
+<script>
+(() => {
+  const D = window.HAISHI, $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const info = p => (D.photoInfo || {})[p] || {};
+  $('echoText').textContent = D.echo;
+  $('closing').textContent = D.closing || '';
+
+  /* ---- 招牌：「海市」一行字慢慢滑過，每秒 40px ---- */
+  { const run = '<span>海市</span>'.repeat(4), html = `<span style="display:flex">${run}</span><span style="display:flex">${run}</span>`;
+    $('line').innerHTML = html; $('line2').innerHTML = html;
+    const fit = () => { const w = $('line').scrollWidth / 2; document.querySelectorAll('.line').forEach(l => l.style.setProperty('--dur', `${(w / 40).toFixed(1)}s`)); };
+    fit(); document.fonts && document.fonts.ready.then(fit); addEventListener('resize', fit); }
+
+  /* ---- 展期 ---- */
+  const md = d => { const x = new Date(d); return `${x.getMonth() + 1} 月 ${x.getDate()} 日`; };
+  $('heroDate').textContent = `${md(D.show.start)}至 ${new Date(D.show.end).getDate()} 日，龍口市場〔日期與攤位待確認〕`;
+  $('showDate').textContent = `${md(D.show.start)}至 ${new Date(D.show.end).getDate()} 日，成果展期間〔待確認〕`;
+
+  /* ---- 冰還剩多少 ---- */
+  const ice = window.HaishiIce();
+  $('iceW').textContent = `${ice.weight.toFixed(1)} 斤`;
+  $('icePhase').textContent = `冰現在的重量，${ice.phase}。展期中照現場每小時秤的數字往下掉`;
+
+  /* ---- 走進巷子（原本的巷子畫面） ---- */
+  (() => {
+    const svg = $('aisleSvg'), VX = 560, VY = 318, N = 15, out = [];
+    const sc = k => 2.1 / (1 + k * .45);
+    const bend = k => k > 4 ? Math.pow(k - 4, 1.7) * 9 : 0;
+    const P = (k, x, y) => [VX + (x + bend(k)) * sc(k), VY + y * sc(k)];
+    const HW = 250, CEIL = -250, FLOOR = 300;
+    const f = v => v.toFixed(1), pt = a => `${f(a[0])},${f(a[1])}`;
+    const poly = (a, fill, extra = '') => `<polygon points="${a.map(pt).join(' ')}" fill="${fill}"${extra}/>`;
+    const line = (a, b, st, w, extra = '') => `<line x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(b[0])}" y2="${f(b[1])}" stroke="${st}" stroke-width="${w}"${extra}/>`;
+    let s = 7; const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    out.push(`<defs><filter id="bl" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="6"/></filter>
+      <radialGradient id="end" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f6f1df" stop-opacity=".95"/><stop offset=".5" stop-color="#d9d4bd" stop-opacity=".35"/><stop offset="1" stop-color="#d9d4bd" stop-opacity="0"/></radialGradient></defs>`);
+    out.push(`<rect width="1200" height="600" fill="#161b1d"/>`);
+    const E = P(N, 0, 0); out.push(`<ellipse cx="${f(E[0])}" cy="${f(E[1] - 10)}" rx="190" ry="150" fill="url(#end)"/>`);
+    out.push(poly([P(N, -HW, CEIL), P(N, HW, CEIL), P(N, HW, FLOOR), P(N, -HW, FLOOR)], '#e9e4cf', ' opacity=".8"'));
+    const kinds = []; for (let k = 0; k < N; k++) kinds.push([r(), r(), r(), r(), r(), r()]);
+    for (let k = N - 1; k >= 0; k--) {
+      const [a1, a2, a3, a4, a5, a6] = kinds[k], w = v => (v * sc(k)).toFixed(2);
+      out.push(poly([P(k, -HW, FLOOR), P(k, HW, FLOOR), P(k + 1, HW, FLOOR), P(k + 1, -HW, FLOOR)], k % 2 ? '#2b3032' : '#2e3436'));
+      out.push(poly([P(k, -6, FLOOR), P(k, 6, FLOOR), P(k + 1, 6, FLOOR), P(k + 1, -6, FLOOR)], '#1b1f20'));
+      const frp = a1 < .3;
+      out.push(poly([P(k, -HW - 30, CEIL), P(k, HW + 30, CEIL), P(k + 1, HW + 30, CEIL), P(k + 1, -HW - 30, CEIL)], frp ? '#8d9a86' : (k % 2 ? '#262b2d' : '#2c3234'), frp ? ' opacity=".9"' : ''));
+      out.push(line(P(k, -HW - 30, CEIL + 6), P(k, HW + 30, CEIL + 6), '#121617', w(5)));
+      [-1, 1].forEach((sd, si) => {
+        const v = si ? a2 : a3, x = sd * HW;
+        const face = [P(k, x, CEIL + 4), P(k + 1, x, CEIL + 4), P(k + 1, x, FLOOR), P(k, x, FLOOR)];
+        if (v < .6) {
+          const blue = (si ? a4 : a5) < .55;
+          out.push(poly(face, blue ? '#4f6c86' : '#646d70'));
+          for (let q = 0; q < 22; q++) { const y = CEIL + 30 + q * 24; out.push(line(P(k, x, y), P(k + 1, x, y), blue ? '#3d566d' : '#525a5d', w(2.4))); }
+          out.push(poly([P(k, x, CEIL + 4), P(k + 1, x, CEIL + 4), P(k + 1, x, CEIL + 34), P(k, x, CEIL + 34)], '#3a4244'));
+          if (a6 < .35 && si) { const [px, py] = P(k + .5, x, 40); out.push(`<rect x="${f(px - 14 * sc(k))}" y="${f(py - 20 * sc(k))}" width="${w(28)}" height="${w(40)}" fill="#e4e0d2" opacity=".85"/>`); }
+        } else if (v < .82) {
+          out.push(poly(face, '#2a2420'));
+          const [lx, ly] = P(k + .5, x - sd * 40, CEIL + 90);
+          out.push(`<circle class="glowline" cx="${f(lx)}" cy="${f(ly)}" r="${w(46)}" fill="#ffc874" opacity="0" filter="url(#bl)"/><circle cx="${f(lx)}" cy="${f(ly)}" r="${w(7)}" fill="#ffe8b4"/>`);
+          out.push(line([lx, ly - 40 * sc(k)], [lx, ly], '#111', w(1.5)));
+          out.push(poly([P(k + .08, x - sd * 34, 150), P(k + .92, x - sd * 34, 150), P(k + .92, x - sd * 34, FLOOR), P(k + .08, x - sd * 34, FLOOR)], '#8c7a60'));
+          out.push(poly([P(k + .08, x, 146), P(k + .92, x, 146), P(k + .92, x - sd * 34, 150), P(k + .08, x - sd * 34, 150)], '#b7a585'));
+          for (let q = 0; q < 6; q++) { const [gx, gy] = P(k + .12 + q * .13, x - sd * 18, 140); out.push(`<circle cx="${f(gx)}" cy="${f(gy)}" r="${w(9)}" fill="${['#c5523a', '#8fae4b', '#d9a441', '#e6dccb', '#5f8f4a'][(q + k) % 5]}"/>`); }
+        } else {
+          out.push(poly(face, '#22272a'));
+          out.push(poly([P(k + .1, x - sd * 60, 210), P(k + .9, x - sd * 60, 210), P(k + .9, x - sd * 60, FLOOR), P(k + .1, x - sd * 60, FLOOR)], '#5a4632'));
+          out.push(poly([P(k + .1, x, 205), P(k + .9, x, 205), P(k + .9, x - sd * 60, 210), P(k + .1, x - sd * 60, 210)], '#8a7050'));
+          const [cx, cy] = P(k + .5, x - sd * 80, FLOOR - 40); out.push(`<rect x="${f(cx - 22 * sc(k))}" y="${f(cy - 18 * sc(k))}" width="${w(44)}" height="${w(36)}" fill="#3c8d5a"/>`);
+        }
+        out.push(line(P(k, x, CEIL), P(k, x, FLOOR), '#141819', w(6)));
+      });
+      if (a4 > .45 && k > 1) { const sd = a5 < .5 ? -1 : 1, [cx, cy] = P(k + .5, sd * (HW - 85), CEIL + 70), bw = 150 * sc(k), bh = 70 * sc(k);
+        const words = [['水餃', '餡餅'], ['化粧品', '香水'], ['繡', '莊'], ['豆', '腐'], ['南北', '貨'], ['修改', '衣服']][Math.floor(a6 * 6)];
+        out.push(line([cx - bw * .3, cy - bh / 2 - 30 * sc(k)], [cx - bw * .3, cy - bh / 2], '#111', w(1.5)) + line([cx + bw * .3, cy - bh / 2 - 30 * sc(k)], [cx + bw * .3, cy - bh / 2], '#111', w(1.5)));
+        out.push(`<rect x="${f(cx - bw / 2)}" y="${f(cy - bh / 2)}" width="${f(bw)}" height="${f(bh)}" fill="#ecebe3" stroke="#3b3f40" stroke-width="${w(3)}"/>`);
+        out.push(`<text x="${f(cx - bw * .22)}" y="${f(cy + bh * .17)}" text-anchor="middle" font-family="Noto Serif TC, serif" font-weight="900" font-size="${w(words[0].length > 2 ? 24 : 32)}" fill="#1f4f9a">${words[0]}</text><text x="${f(cx + bw * .25)}" y="${f(cy + bh * .17)}" text-anchor="middle" font-family="Noto Serif TC, serif" font-weight="900" font-size="${w(32)}" fill="#b8342a">${words[1]}</text>`); }
+      if (k > 0 && k < N - 1 && k % 2 === 0) { const A = P(k + .2, 0, CEIL + 22), Bp = P(k + .8, 0, CEIL + 22);
+        out.push(line(A, Bp, '#f4f7ee', w(30), ' class="glowline" opacity="0" filter="url(#bl)"'));
+        out.push(`<line class="tube" style="--i:${k}" x1="${f(A[0])}" y1="${f(A[1])}" x2="${f(Bp[0])}" y2="${f(Bp[1])}" stroke="#ffffff" stroke-width="${w(7)}" stroke-linecap="round"/>`);
+        const [rx, ry] = P(k + .5, 0, FLOOR + 6); out.push(`<ellipse class="glowline" cx="${f(rx)}" cy="${f(ry)}" rx="${w(60)}" ry="${w(10)}" fill="#f4f7ee" opacity="0" filter="url(#bl)"/>`); }
+    }
+    { const bx = 150, by = 560; out.push(`<g stroke="#0d1011" stroke-width="5" fill="none"><circle cx="${bx}" cy="${by}" r="42"/><circle cx="${bx + 120}" cy="${by}" r="42"/><path d="M${bx} ${by} L${bx + 50} ${by - 60} L${bx + 100} ${by - 60} L${bx + 120} ${by} M${bx + 50} ${by - 60} L${bx + 60} ${by} L${bx + 100} ${by - 60} M${bx + 100} ${by - 60} L${bx + 95} ${by - 90} L${bx + 120} ${by - 92}"/></g>`); }
+    const sx = VX + 30, sy = 18;
+    out.push(`<g class="sign"><line x1="${sx - 70}" y1="${sy}" x2="${sx - 70}" y2="${sy + 40}" stroke="#0d1011" stroke-width="2"/><line x1="${sx + 70}" y1="${sy}" x2="${sx + 70}" y2="${sy + 40}" stroke="#0d1011" stroke-width="2"/>
+      <rect x="${sx - 120}" y="${sy + 40}" width="240" height="96" fill="#f0d44a"/><rect x="${sx - 112}" y="${sy + 48}" width="224" height="80" fill="none" stroke="#b8342a" stroke-width="3"/>
+      <text x="${sx}" y="${sy + 108}" text-anchor="middle" font-family="Noto Serif TC, serif" font-weight="900" font-size="58" letter-spacing="20" fill="#b8342a">海市</text></g>`);
+    svg.innerHTML = out.join('');
+
+    // 走到巷口才點燈；往下捲，巷子放大、四周暗下來，巷底的光裡浮出一段話
+    const walk = $('walk'), stage = walk.querySelector('.stage');
+    if (reduce || !('IntersectionObserver' in window)) walk.classList.add('lit');
+    else { const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { walk.classList.add('lit'); io.disconnect(); } }, { threshold: .35 }); io.observe(walk); }
+    let ticking = false;
+    const onScroll = () => {
+      ticking = false;
+      const span = walk.offsetHeight - innerHeight, p = span > 0 ? Math.min(1, Math.max(0, -walk.getBoundingClientRect().top / span)) : 0;
+      if (!reduce) {
+        const e = p * p * (3 - 2 * p);
+        svg.style.transform = `scale(${1 + e * 1.35})`;
+        stage.style.setProperty('--shade', (Math.min(1, p * 1.9) * .9).toFixed(3));
+        const t = Math.min(1, Math.max(0, (p - .38) / .3));
+        stage.style.setProperty('--lo', t.toFixed(3)); stage.style.setProperty('--ly', `${(1 - t) * 30}px`);
+      }
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+    addEventListener('resize', onScroll); onScroll();
+  })();
+
+  /* ---- 照片：有真照片用真照片，沒有就畫佔位 ---- */
+  const photoOr = (s, i, w, h, alt) => {
+    const ph = window.HaishiPlaceholder(s, i, w, h);
+    if (s.photos[i]) { const img = new Image(); img.alt = alt; img.loading = 'lazy'; img.decoding = 'async'; img.src = s.photos[i]; img.onerror = () => img.replaceWith(ph); return img; }
+    ph.setAttribute('role', 'img'); ph.setAttribute('aria-label', `${s.name}照片 ${i + 1}，待補`); return ph;
+  };
+  const figure = (s, i, w, h) => {
+    const fig = document.createElement('figure'), alt = info(s.photos[i]).cap || `${s.name}的照片 ${i + 1}`;
+    fig.append(photoOr(s, i, w, h, alt));
+    const c = document.createElement('figcaption'); c.textContent = s.photos[i] ? alt : `${s.name}，照片待補`; fig.append(c); return fig;
+  };
+
+  /* ---- 秤：同一個錶盤，冰的秤和帳簿的秤都用它 ---- */
+  function dial(value, max, mark) {
+    let t = ''; for (let k = 0; k <= 30; k++) { const a = (-120 + k * 8) * Math.PI / 180, r1 = 62, r2 = k % 5 ? 56 : 49; t += `<line x1="${(75 + Math.sin(a) * r1).toFixed(1)}" y1="${(80 - Math.cos(a) * r1).toFixed(1)}" x2="${(75 + Math.sin(a) * r2).toFixed(1)}" y2="${(80 - Math.cos(a) * r2).toFixed(1)}" stroke="#1d2826" stroke-width="${k % 5 ? 1.2 : 2.4}"/>`; }
+    let m = ''; if (mark != null) { const a = (-120 + mark / max * 240) * Math.PI / 180; m = `<circle cx="${(75 + Math.sin(a) * 42).toFixed(1)}" cy="${(80 - Math.cos(a) * 42).toFixed(1)}" r="4" fill="#c4362c"/>`; }
+    const ang = -120 + Math.min(value, max) / max * 240;
+    return `<svg viewBox="0 0 150 150" aria-hidden="true"><circle cx="75" cy="80" r="68" fill="#f3f4f0"/>${t}${m}
+      <text x="75" y="120" text-anchor="middle" font-size="14" fill="#c4362c" font-family="LXGW WenKai TC, serif">斤</text>
+      <g class="needle" style="transform:rotate(${reduce ? ang : -120}deg)" data-a="${ang}"><line x1="75" y1="88" x2="75" y2="22" stroke="#c4362c" stroke-width="3" stroke-linecap="round"/></g><circle cx="75" cy="80" r="6" fill="#1d2826"/></svg>`;
+  }
+  const swing = root => requestAnimationFrame(() => requestAnimationFrame(() => root.querySelectorAll('.needle').forEach(n => n.style.transform = `rotate(${n.dataset.a}deg)`)));
+
+  /* ---- 四個場域：一排不等寬的鐵捲門，選一扇就拉起來 ---- */
+  const doorColor = { longkou: '#4f6c86', shuangxi: '#646d70', hangkong: '#5a6f7c', shezi: '#4a5f6e' };
+  $('doors').innerHTML = D.sites.map((s, i) => `<button type="button" class="door" role="tab" id="tab-${s.id}" aria-controls="panel" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-id="${s.id}" style="--c:${doorColor[s.id]}">
+      <span class="pic" data-site="${s.id}"></span><span class="shut"></span><span class="scrim"></span><span class="label"><b>${s.name}</b><span>${esc(info(s.photos[0]).cap || s.where)}</span></span></button>`).join('');
+  document.querySelectorAll('.door .pic').forEach(box => { const s = D.sites.find(x => x.id === box.dataset.site); const el = photoOr(s, 0, 400, 600, ''); el.setAttribute('aria-hidden', 'true'); el.alt = ''; box.replaceWith(el); });
+  function show(id, animate) {
+    const s = D.sites.find(x => x.id === id), w = ice.weight;
+    document.querySelectorAll('.door').forEach(b => { const on = b.dataset.id === id; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+    $('panel').setAttribute('aria-labelledby', `tab-${id}`);
+    const row = (k, v) => v ? `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>` : '';
+    $('panel').innerHTML = `<div class="head"><h3>${s.name}</h3><p class="where">${esc(s.role)}，${esc(s.where)}</p><p class="call">「${esc(s.call)}」</p></div>
+      <div class="dial">${dial(w, 30)}<div><b>${w.toFixed(1)}</b><span>${s.name}那塊冰<br>還剩的斤數</span></div></div>
+      <dl>${row('這裡的樣子', s.look)}${row('這裡的處境', s.situation)}${row(s.id === 'longkou' ? '帶回這裡' : '和龍口的共鳴', s.echo)}<div><dd><a class="see3d" href="world.html#${s.id}">在 3D 海市裡看${s.name}</a></dd></div></dl>
+      <div class="ph"></div>`;
+    const box = $('panel').querySelector('.ph'), rest = s.photos.length > 1 ? s.photos.map((p, k) => k).filter(k => k > 0 && s.photos[k] !== 'images/longkou/4.jpg') : [1, 2];
+    box.classList.toggle('one', rest.length === 1); box.classList.toggle('odd', rest.length > 1 && rest.length % 2 === 1);
+    rest.forEach(i => box.append(figure(s, i, 400, 500)));
+    if (animate) swing($('panel')); else $('panel').querySelectorAll('.needle').forEach(n => n.style.transform = `rotate(${n.dataset.a}deg)`);
+  }
+  $('doors').addEventListener('click', e => { const b = e.target.closest('.door'); if (!b || b.getAttribute('aria-selected') === 'true') return; show(b.dataset.id, !reduce);
+    // 手機上門和說明不在同一屏，選了以後把說明捲進來
+    if (innerWidth <= 760) $('panel').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); });
+  $('doors').addEventListener('keydown', e => {
+    const bs = [...document.querySelectorAll('.door')], i = bs.indexOf(document.activeElement); if (i < 0) return;
+    const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0; if (!d) return;
+    e.preventDefault(); const nx = bs[(i + d + bs.length) % bs.length]; nx.focus(); show(nx.dataset.id, !reduce);
+  });
+  show('longkou', false);
+  if (!reduce && 'IntersectionObserver' in window) {   // 第一次捲到這裡，秤一次
+    $('panel').querySelectorAll('.needle').forEach(n => n.style.transform = 'rotate(-120deg)');
+    const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { swing($('panel')); io.disconnect(); } }, { threshold: .4 }); io.observe($('panel'));
+  }
+
+  /* ---- 走讀撿到的：一張表，全部同一個字級 ---- */
+  { const groups = ['shuangxi', 'hangkong'].map(id => ({ s: D.sites.find(x => x.id === id), items: (D.walk || []).filter(w => w.site === id) })).filter(g => g.items.length);
+    $('tags').innerHTML = `<caption class="sr">走讀時撿到的東西，依地方分組</caption>` + groups.map(g => `<tbody><tr><th scope="rowgroup" colspan="3">${g.s.name}<a class="jump" href="world.html#${g.s.id}">在 3D 海市裡找</a></th></tr>
+      ${g.items.map(w => `<tr><th scope="row">${esc(w.thing)}</th><td>${esc(w.note)}</td><td class="no"><span class="stamp">不賣</span></td></tr>`).join('')}</tbody>`).join(''); }
+
+  /* ---- 龍口的攤位：五件事 ---- */
+  { const steps = [
+      ['聽叫賣', '聽到叫賣，停下來看冰上的影像和秤上的數字。', 'images/longkou/2.jpg', '龍口市場的巷子裡，攤位在巷口'],
+      ['不收錢', '想要一袋水的話，這裡不收錢，只換一個地方。'],
+      ['寫一個地方', '寫下一個你離開過的地方，或者說給顧攤的人聽，由他代寫。'],
+      ['裝一袋水', '選一塊冰，裝一小袋融水，綁紅繩，標上地名和重量。'],
+      ['夾上繩子', '你寫的字夾到攤位的繩子上，也會同步到這個網站的帳簿。']
+    ], tint = [['var(--shut-1)', 'var(--on-dark)'], ['var(--shut-2)', 'var(--on-dark)'], ['var(--shut-3)', '#fff'], ['var(--shut-4)', 'var(--ink)'], ['var(--shut-5)', 'var(--ink)']];
+    $('steps').innerHTML = steps.map(([n, t, img, alt], i) => `<div class="step${i ? '' : ' open'}" style="--bg:${tint[i][0]};--fg:${tint[i][1]}">
+      <button type="button" aria-expanded="${!i}" aria-controls="st-${i}"><span class="tab">${n}</span></button>
+      <div class="body${img ? '' : ' solo'}" id="st-${i}"><div class="t"><h3>${n}</h3><p>${t}</p></div>${img ? `<img src="${img}" alt="${alt}" loading="lazy">` : ''}</div></div>`).join('');
+    $('steps').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const st = b.parentElement;
+      if (st.classList.contains('open') && innerWidth > 760) return;
+      const was = st.classList.contains('open');
+      document.querySelectorAll('.step').forEach(x => { x.classList.remove('open'); x.querySelector('button').setAttribute('aria-expanded', 'false'); });
+      if (!was || innerWidth > 760) { st.classList.add('open'); b.setAttribute('aria-expanded', 'true'); } }); }
+
+  /* ---- 帳簿：寫得越多越重，秤跟著轉 ---- */
+  const BAG = window.HaishiLedger.bag, SMAX = 3;
+  const weighNow = () => {
+    const p = $('place').value.trim(), w = $('words').value.trim(), kg = (p || w) ? window.HaishiLedger.weigh(p, w) : 0;
+    const enough = kg >= BAG, sc = $('scale');
+    if (!sc.firstChild) { sc.innerHTML = `${dial(0, SMAX, BAG)}<div><b>0.0 斤</b><span></span></div>`; }
+    sc.querySelector('.needle').style.transform = `rotate(${-120 + Math.min(kg, SMAX) / SMAX * 240}deg)`;
+    sc.querySelector('b').textContent = `${kg.toFixed(1)} 斤`;
+    sc.querySelector('span').textContent = !kg ? `秤到 ${BAG} 斤，就換得到一袋融水` : enough ? '夠重了，可以夾上繩子' : '還輕了一點，再多說一點這個地方';
+    sc.classList.toggle('enough', enough);
+  };
+  ['input', 'change'].forEach(ev => { $('place').addEventListener(ev, weighNow); $('words').addEventListener(ev, weighNow); });
+  weighNow();
+  function rope(fresh) {
+    $('rope').innerHTML = window.HaishiLedger.all().slice(0, 24).map((e, i) => {
+      const d = new Date(e.ts);
+      return `<li class="${fresh && i === 0 ? 'drop' : ''}"><div class="pl">${esc(e.place)}</div><div class="wd">${esc(e.words)}</div>
+        <div class="mt"><span>${e.w.toFixed(1)} 斤</span>${e.site ? `<span>換走${(D.sites.find(s => s.id === e.site) || {}).name || ''}的融水</span>` : ''}${e.sample ? '<span class="ex">範例</span>' : `<span>${d.getMonth() + 1}/${d.getDate()}</span>`}</div></li>`;
+    }).join('');
+  }
+  rope(false);
+  $('trade').addEventListener('submit', e => {
+    e.preventDefault();
+    const p = $('place').value.trim(), w = $('words').value.trim(); if (!p || !w) return;
+    const kg = window.HaishiLedger.weigh(p, w);
+    if (kg < BAG) { $('done').textContent = `「${p}」現在 ${kg.toFixed(1)} 斤，還輕了一點，再多說一點這個地方。`; $('words').focus(); return; }
+    const en = window.HaishiLedger.add(p, w); e.target.reset(); weighNow(); rope(!reduce);
+    $('done').textContent = `「${p}」秤起來 ${en.w.toFixed(1)} 斤，夾上繩子了。`;
+  });
+
+  /* ---- 屋頂那張照片：捲動時慢慢往上移，像抬頭看屋頂 ---- */
+  if (!reduce) { const roof = document.querySelector('.roof'), img = roof.querySelector('img'); let tk = false;
+    const onR = () => { tk = false; const r = roof.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;
+      const k = (innerHeight - r.top) / (innerHeight + r.height); img.style.setProperty('--py', `${(-15 * k).toFixed(2)}%`); };
+    addEventListener('scroll', () => { if (!tk) { tk = true; requestAnimationFrame(onR); } }, { passive: true }); onR(); }
+
+  /* ---- 頁尾：四個地方、照片出處 ---- */
+  $('places').innerHTML = D.sites.map(s => `<li><a href="world.html#${s.id}">${s.name}</a></li>`).join('');
+  $('credits').innerHTML = Object.entries(D.photoInfo || {}).filter(([, v]) => v.url).map(([, v]) => `<li>${esc(v.cap)}：<a href="${esc(v.url)}" rel="noopener">${esc(v.by)}</a>，Wikimedia Commons</li>`).join('') + '<li>龍口、雙溪、航空城的照片：Koza</li>';
+
+  /* ---- 目錄（手機） ---- */
+  $('menuBtn').addEventListener('click', () => { const o = $('nav').classList.toggle('open'); $('menuBtn').setAttribute('aria-expanded', String(o)); $('menuBtn').textContent = o ? '收起' : '目錄'; });
+  $('nav').addEventListener('click', e => { if (e.target.closest('a')) { $('nav').classList.remove('open'); $('menuBtn').setAttribute('aria-expanded', 'false'); $('menuBtn').textContent = '目錄'; } });
+
+  /* ---- 進場 ---- */
+  const rises = document.querySelectorAll('[data-rise]');
+  if (reduce || !('IntersectionObserver' in window)) rises.forEach(el => el.classList.add('in'));
+  else { const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting || en.boundingClientRect.top < 0) { en.target.classList.add('in'); io.unobserve(en.target); } }), { rootMargin: '0px 0px -12% 0px' }); rises.forEach(el => io.observe(el)); }
+
+  /* ---- 導覽列：捲到哪一段就標哪一段 ---- */
+  const links = [...document.querySelectorAll('.beam nav a')];
+  if ('IntersectionObserver' in window) {
+    const io2 = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) links.forEach(a => a.setAttribute('aria-current', String(a.getAttribute('href') === '#' + en.target.id))); }), { rootMargin: '-45% 0px -50% 0px' });
+    document.querySelectorAll('main section').forEach(s => io2.observe(s));
+  }
+})();
+</script>
+</body>
+</html>

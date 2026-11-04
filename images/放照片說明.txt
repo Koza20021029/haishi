@@ -1,0 +1,14 @@
+把四地的照片放進對應的資料夾：
+
+longkou   龍口
+shuangxi  雙溪
+hangkong  航空城
+shezi     社子島
+
+檔名建議用 1.jpg、2.jpg、3.jpg……
+放好後，打開 js/data.js，在該場域的 photos 裡寫上路徑，例如：
+
+photos: ['images/longkou/1.jpg', 'images/longkou/2.jpg', 'images/longkou/3.jpg'],
+
+照片建議：每地 3 到 5 張，對比強、暗底、主體單純，從遠景排到近景（一扇門、一雙手）。
+寬度 1200 像素左右就夠，太大會讓網頁變慢。

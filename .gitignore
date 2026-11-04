@@ -1,0 +1,7 @@
+# 系統檔
+.DS_Store
+
+# 設計檢查的截圖、改版前的備份（只在本機用）
+.taste-skill/
+.impeccable/
+.playwright-mcp/

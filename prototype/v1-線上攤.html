@@ -1,0 +1,399 @@
+<title>海市線上攤</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500&display=swap">
+<style>
+/* 版面：夜裡的一個攤位。上方是起霧的冰攤，中間是秤與收據，下方是帳簿與架構說明。刻意只做深色，像收攤後的市場。 */
+:root{
+  --night:#0c1417; --night-2:#121d21; --ink:#e3ecec; --muted:#8fa5a8;
+  --ice:#c9eef3; --water:#5f9fb0; --tag:#e0483a; --paper:#efeee6; --paper-ink:#24282a;
+  --line:rgba(201,238,243,.16);
+  --f-display:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--night);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1040px;margin:0 auto}
+header{padding-block:40px 20px;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(40px,8vw,72px);line-height:1;margin:0;letter-spacing:.06em}
+h1 small{font-size:.32em;letter-spacing:.2em;color:var(--muted);margin-left:.6em;font-weight:500}
+.lede{max-width:34em;color:var(--muted);margin:0;text-wrap:pretty}
+.proto{display:inline-block;font-size:12px;letter-spacing:.12em;border:1px solid var(--line);padding:2px 10px;border-radius:2px;color:var(--ice)}
+h2{font-family:var(--f-display);font-weight:500;font-size:24px;letter-spacing:.08em;margin:0 0 4px;text-wrap:balance}
+.sec{padding-block:40px 8px;border-top:1px solid var(--line);margin-top:40px}
+.hint{color:var(--muted);font-size:13px;margin:0 0 20px}
+
+/* 冰攤 */
+.stall{position:relative;border-radius:4px;overflow:hidden;
+  background:linear-gradient(180deg,#0f1b1f 0%,#0b1316 70%,#162328 100%);
+  padding:28px 16px 18px}
+.ices{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:16px;align-items:end;position:relative;z-index:1}
+.ice{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;cursor:pointer;
+  background:none;border:0;color:inherit;font:inherit;padding:0}
+.ice:focus-visible{outline:2px solid var(--ice);outline-offset:4px}
+.ice canvas{width:100%;height:auto;aspect-ratio:3/4;display:block}
+.tag{display:flex;gap:8px;align-items:baseline;background:var(--tag);color:#fff;padding:2px 10px;border-radius:2px;
+  font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap;transform:rotate(-2deg)}
+.tag b{font-family:var(--f-display);font-size:16px;letter-spacing:.1em}
+.gaze{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:1.6em;text-align:center}
+.counter{height:14px;background:linear-gradient(180deg,#2a3a3f,#1a2629);border-top:1px solid #3c5257;margin:10px -16px -18px;position:relative;z-index:1}
+#fog{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.call{position:absolute;z-index:3;max-width:min(300px,80%);background:var(--paper);color:var(--paper-ink);
+  font-family:var(--f-display);font-size:17px;line-height:1.5;padding:10px 14px;border-radius:2px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);transition:opacity .6s}
+.call small{display:block;font-family:var(--f-body);font-size:11px;color:#6b7173;margin-top:4px}
+
+/* 秤與收據 */
+.trade{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+.trade > *{min-width:0}
+form{display:grid;gap:14px}
+label{display:grid;gap:4px;font-size:13px;color:var(--muted);letter-spacing:.06em}
+input,textarea{font:inherit;color:var(--ink);background:var(--night-2);border:1px solid var(--line);border-radius:2px;padding:10px 12px;width:100%}
+textarea{min-height:88px;resize:vertical}
+input:focus-visible,textarea:focus-visible{outline:2px solid var(--ice);outline-offset:1px}
+.btn{font:inherit;font-family:var(--f-display);font-size:17px;letter-spacing:.2em;cursor:pointer;
+  background:var(--ice);color:var(--night);border:0;border-radius:2px;padding:10px 18px;justify-self:start}
+.btn:focus-visible{outline:2px solid var(--tag);outline-offset:3px}
+.btn[disabled]{opacity:.5;cursor:default}
+.scale{display:flex;flex-direction:column;align-items:center;gap:6px}
+.scale svg{width:min(260px,100%);height:auto}
+.readout{font-family:var(--f-display);font-size:32px;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.readout span{font-size:15px;color:var(--muted);margin-left:4px}
+.receipt{margin-top:16px;background:var(--paper);color:var(--paper-ink);padding:18px 18px 22px;border-radius:1px;
+  font-size:13px;line-height:1.7;max-width:320px;width:100%;
+  mask:linear-gradient(#000,#000) top/100% calc(100% - 8px) no-repeat, radial-gradient(circle at 6px 0,transparent 5px,#000 5.5px) bottom/12px 8px repeat-x;
+  -webkit-mask:linear-gradient(#000,#000) top/100% calc(100% - 8px) no-repeat, radial-gradient(circle at 6px 0,transparent 5px,#000 5.5px) bottom/12px 8px repeat-x}
+.receipt h3{font-family:var(--f-display);text-align:center;font-size:18px;letter-spacing:.3em;margin:0 0 6px}
+.receipt .row{display:flex;justify-content:space-between;gap:12px;border-top:1px dashed #9aa;padding-top:4px;margin-top:4px;font-variant-numeric:tabular-nums}
+.receipt .row span:last-child{text-align:right;overflow-wrap:anywhere}
+.receipt canvas{display:block;width:100%;height:auto;aspect-ratio:4/3;margin:10px 0 4px;background:#d9dcd6}
+.receipt .note{font-size:11px;color:#6b7173;text-align:center}
+
+/* 帳簿 */
+.ledger{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.entry{border:1px solid var(--line);border-radius:2px;padding:12px 14px;min-width:0;transition:opacity 1s}
+.entry .place{font-family:var(--f-display);font-size:19px;letter-spacing:.08em}
+.entry p{margin:4px 0 6px;color:var(--ink);overflow-wrap:anywhere}
+.entry .meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;gap:8px}
+.sample{font-size:11px;color:var(--tag);letter-spacing:.1em}
+
+/* 架構說明 */
+.path{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;list-style:none;padding:0;margin:0;counter-reset:s}
+.path li{min-width:0;counter-increment:s}
+.path li::before{content:counter(s);font-family:var(--f-display);font-size:28px;color:var(--ice);display:block;line-height:1.2}
+.path h3{font-family:var(--f-display);font-weight:500;font-size:18px;margin:0 0 4px;letter-spacing:.06em}
+.path p{margin:0;color:var(--muted);font-size:14px}
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:32px}
+.notes > div{min-width:0}
+.notes h3{font-family:var(--f-display);font-weight:500;font-size:18px;margin:0 0 8px}
+.notes p,.notes li{color:var(--muted);font-size:14px;max-width:36em}
+.notes ul{padding-left:1.2em;margin:0}
+
+@media (max-width:760px){
+  .ices{grid-template-columns:1fr 1fr}
+  .trade,.notes{grid-template-columns:1fr}
+  .path{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){ .call,.entry{transition:none} }
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <span class="proto">試做版・照片與叫賣皆為佔位</span>
+    <h1>海市<small>線上攤</small></h1>
+  </div>
+  <p class="lede">龍口吐出來的一座市。冰塊上的照片會慢慢化掉，看得越久化得越快。沒來市場的人，也可以在這裡寫下一個自己離開過的地方，放上秤，換走一點融水。</p>
+</header>
+
+<section aria-label="冰攤">
+  <div class="stall" id="stall">
+    <div class="ices" id="ices"></div>
+    <div class="counter" aria-hidden="true"></div>
+    <canvas id="fog" aria-hidden="true"></canvas>
+  </div>
+  <p class="hint" style="margin-top:10px">滑過攤位可以抹開霧氣。停在冰上會讓它化得比較快，點一下冰會聽見叫賣。</p>
+</section>
+
+<section class="sec" aria-labelledby="t-trade">
+  <h2 id="t-trade">上秤</h2>
+  <p class="hint">這攤不收錢。寫下一個你離開過的地方，和一句關於它的話，秤一秤，換一袋融水。</p>
+  <div class="trade">
+    <form id="tradeForm" autocomplete="off">
+      <label for="place">一個你離開過的地方
+        <input id="place" maxlength="20" placeholder="例如 外婆家的巷口" required>
+      </label>
+      <label for="words">關於它，你還記得的一件事
+        <textarea id="words" maxlength="120" placeholder="例如 下午三點會有賣豆花的腳踏車經過" required></textarea>
+      </label>
+      <button class="btn" id="weighBtn" type="submit">放上秤</button>
+    </form>
+    <div class="scale">
+      <svg viewBox="0 0 260 170" aria-hidden="true">
+        <g id="plate" style="transition:transform .9s cubic-bezier(.3,1.6,.5,1)">
+          <ellipse cx="130" cy="22" rx="96" ry="12" fill="#2b3d42" stroke="#c9eef3" stroke-opacity=".5"/>
+          <rect x="124" y="30" width="12" height="34" fill="#2b3d42"/>
+        </g>
+        <rect x="58" y="64" width="144" height="90" rx="6" fill="#1a272b" stroke="#c9eef3" stroke-opacity=".35"/>
+        <circle cx="130" cy="108" r="30" fill="#0c1417" stroke="#c9eef3" stroke-opacity=".5"/>
+        <line id="needle" x1="130" y1="108" x2="130" y2="82" stroke="#e0483a" stroke-width="3" stroke-linecap="round" style="transform-origin:130px 108px;transition:transform .9s cubic-bezier(.3,1.6,.5,1)"/>
+      </svg>
+      <div class="readout" id="readout" aria-live="polite">0.0<span>斤</span></div>
+      <div class="receipt" id="receipt" hidden>
+        <h3>海市</h3>
+        <div style="text-align:center;font-size:11px;color:#6b7173">龍口市場・線上攤</div>
+        <div class="row"><span>收到</span><span id="r-place"></span></div>
+        <div class="row"><span>重量</span><span id="r-weight"></span></div>
+        <div class="row"><span>換出</span><span id="r-out"></span></div>
+        <canvas id="r-water" width="400" height="300"></canvas>
+        <div class="note" id="r-note">這袋融水會在二十秒內化掉，留不住</div>
+        <div class="row"><span>時間</span><span id="r-time"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="t-ledger">
+  <h2 id="t-ledger">帳簿</h2>
+  <p class="hint">換進攤上的地方都記在這裡。越舊的字越淡，像被潮水退過。</p>
+  <div class="ledger" id="ledger"></div>
+</section>
+
+<section class="sec" aria-labelledby="t-arch">
+  <h2 id="t-arch">線上空間怎麼走</h2>
+  <p class="hint">給 Koza 看的架構說明。觀眾的動線就是下面四步。</p>
+  <ol class="path">
+    <li><h3>起霧</h3><p>一進來整個攤位隔著一層霧，要用滑鼠或手指抹開才看得清楚。海市本來就是隔著水氣看見的東西。</p></li>
+    <li><h3>看冰</h3><p>四塊冰各投一個場域的照片，龍口那塊最大。冰會自己慢慢化，你停在上面看，它就化得更快。看得越用力，留下的越少。</p></li>
+    <li><h3>上秤</h3><p>寫下一個自己離開過的地方，用字的分量秤重。換到的是一小塊正在化掉的照片，二十秒後就沒了，存不下來。</p></li>
+    <li><h3>帳簿</h3><p>大家換進來的地方留在攤上，慢慢變淡。展期結束時，冰化完了，留下的只剩這些別人的地方。</p></li>
+  </ol>
+  <div class="notes">
+    <div>
+      <h3>和龍口實體攤位的關係</h3>
+      <p>實體攤只擺一天或幾天，線上是它退潮之後留下來的那一段。展出當天，攤位旁貼一張 QR，現場的人在冰前寫下的地方，同時也進到線上帳簿。你每隔一小時替真的冰秤一次重，這些數字就是線上冰化掉的速度，所以線上的冰是照著龍口那天的節奏在化。</p>
+      <p>收攤以後，實體的冰已經變成水倒掉了，線上的冰還在，只是化得非常慢，可能要化上一整個月。這段時間沒來的人還能上秤交換，帳簿繼續長。最後一塊冰化完那天，網站只剩帳簿，那是這座海市真正散掉的日子。</p>
+    </div>
+    <div>
+      <h3>還要你決定或補上的</h3>
+      <ul>
+        <li>四個場域各要放哪幾張照片（目前是畫出來的佔位圖）</li>
+        <li>叫賣要用居民原話的錄音，還是你自己叫（目前是試寫的文字）</li>
+        <li>帳簿要不要讓所有觀眾共看（目前只存在每個人自己的瀏覽器）</li>
+        <li>現場能不能每小時秤一次冰、記下重量，讓線上照著化</li>
+        <li>收攤後線上的冰要化多久（一週、一個月，或到結業式）</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+(() => {
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SITES = [
+  {id:'longkou', name:'龍口', hue:12, main:true,
+   calls:['來喔來喔，剛到的龍口，一斤算你便宜啦','這攤是龍的嘴，吐出來的都是海市','慢慢看沒關係，看久了它就化給你看']},
+  {id:'shuangxi', name:'雙溪', hue:150,
+   calls:['雙溪的河水，秤給你看，比你想的重','山裡的雨落下來就到這了，帶一點回去']},
+  {id:'hangkong', name:'航空城', hue:215,
+   calls:['航空城的厝，拆了就沒了，最後一批喔','飛機一直飛過去，這斤你要不要']},
+  {id:'shezi', name:'社子島', hue:190,
+   calls:['社子島的潮水，漲起來又退下去','堤防外面的地，算你一斤就好']},
+];
+
+// 佔位照片：用程式畫出每個場域的假照片
+function rng(seed){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}}
+function drawPhoto(site, idx, w, h){
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+  const r=rng(site.hue*97+idx*13+7);
+  const g=x.createLinearGradient(0,0,0,h);
+  g.addColorStop(0,`hsl(${site.hue+idx*8},30%,${18+r()*10}%)`);
+  g.addColorStop(.55,`hsl(${site.hue+20},35%,${40+r()*15}%)`);
+  g.addColorStop(1,`hsl(${site.hue-10},25%,${12+r()*8}%)`);
+  x.fillStyle=g;x.fillRect(0,0,w,h);
+  const horizon=h*(.45+r()*.2);
+  for(let i=0;i<14;i++){
+    const bw=w*(.05+r()*.18),bh=h*(.08+r()*.3),bx=r()*w;
+    x.fillStyle=`hsla(${site.hue+r()*30},20%,${8+r()*20}%,.85)`;
+    x.fillRect(bx,horizon-bh,bw,bh+h);
+    if(r()>.5){x.fillStyle=`hsla(45,90%,70%,${.4+r()*.5})`;x.fillRect(bx+bw*.3,horizon-bh*.7,3,3)}
+  }
+  x.fillStyle='rgba(255,255,255,.75)';x.font=`${Math.round(w/14)}px "Noto Sans TC",sans-serif`;
+  x.textAlign='center';x.fillText(`${site.name}・照片 ${idx+1}`,w/2,h*.88);
+  x.font=`${Math.round(w/20)}px "Noto Sans TC",sans-serif`;x.fillStyle='rgba(255,255,255,.5)';
+  x.fillText('〔待換成 Koza 的照片〕',w/2,h*.94);
+  return c;
+}
+
+const icesEl=document.getElementById('ices');
+const PHOTOS=4, FULL=25; // 一塊冰 25 斤
+const state=SITES.map((s,i)=>{
+  const b=document.createElement('button');b.className='ice';b.type='button';
+  b.setAttribute('aria-label',`${s.name}的冰，點一下聽叫賣`);
+  const cv=document.createElement('canvas');cv.width=s.main?420:320;cv.height=Math.round(cv.width*4/3);
+  const tag=document.createElement('div');tag.className='tag';tag.innerHTML=`<b>${s.name}</b><span>25.0 斤</span>`;
+  const gz=document.createElement('div');gz.className='gaze';
+  b.append(cv,tag,gz);icesEl.append(b);
+  const st={s,b,cv,ctx:cv.getContext('2d'),tag:tag.querySelector('span'),gz,
+    melt:.12+i*.11,photo:0,gazeSec:0,hover:false,drops:[],cache:null,cacheKey:''};
+  st.photos=Array.from({length:PHOTOS},(_,k)=>drawPhoto(s,k,cv.width,cv.height));
+  b.addEventListener('pointerenter',()=>st.hover=true);
+  b.addEventListener('pointerleave',()=>st.hover=false);
+  b.addEventListener('focus',()=>st.hover=true);
+  b.addEventListener('blur',()=>st.hover=false);
+  b.addEventListener('click',()=>shout(st));
+  return st;
+});
+
+function blurred(st){
+  const step=Math.round(st.melt*20),key=st.photo+':'+step;
+  if(st.cacheKey===key)return st.cache;
+  const src=st.photos[st.photo],c=document.createElement('canvas');c.width=src.width;c.height=src.height;
+  const x=c.getContext('2d');x.filter=`blur(${step*.35}px) saturate(${1-step*.03})`;x.drawImage(src,0,0);
+  st.cache=c;st.cacheKey=key;return c;
+}
+
+function drawIce(st,t){
+  const {ctx:x,cv}=st,W=cv.width,H=cv.height,m=st.melt;
+  x.clearRect(0,0,W,H);
+  const puddleY=H*.93;
+  // 融水
+  x.fillStyle=`rgba(95,159,176,${.15+m*.35})`;
+  x.beginPath();x.ellipse(W/2,puddleY,W*(.3+m*.2),H*(.015+m*.03),0,0,7);x.fill();
+  // 冰的形狀：越化越矮、越圓
+  const bw=W*(.82-m*.2),bh=H*(.84-m*.5),bx=(W-bw)/2,by=puddleY-bh,rad=8+m*W*.18;
+  x.save();x.beginPath();
+  x.moveTo(bx,puddleY);x.lineTo(bx,by+rad);x.quadraticCurveTo(bx,by,bx+rad,by);
+  const seg=12;
+  for(let i=1;i<seg;i++){const px=bx+rad+(bw-2*rad)*i/seg;
+    x.lineTo(px,by+Math.sin(i*1.7+t*.0006)*m*10+Math.sin(i*3.1)*m*6)}
+  x.lineTo(bx+bw-rad,by);x.quadraticCurveTo(bx+bw,by,bx+bw,by+rad);x.lineTo(bx+bw,puddleY);x.closePath();
+  x.clip();
+  const img=blurred(st);
+  x.globalAlpha=.92-m*.35;
+  x.drawImage(img,bx-W*.05,by-H*.05,bw+W*.1,bh+H*.1);
+  x.globalAlpha=1;
+  const ig=x.createLinearGradient(bx,by,bx+bw,puddleY);
+  ig.addColorStop(0,'rgba(220,245,250,.38)');ig.addColorStop(.5,'rgba(201,238,243,.08)');ig.addColorStop(1,'rgba(160,215,225,.3)');
+  x.fillStyle=ig;x.fillRect(bx,by,bw,bh);
+  x.strokeStyle='rgba(235,250,252,.5)';x.lineWidth=2;x.beginPath();
+  x.moveTo(bx+bw*.12,by+bh*.12);x.lineTo(bx+bw*.12,by+bh*.55);x.stroke();
+  x.restore();
+  // 水滴
+  if(!reduce&&Math.random()<.02+m*.06+(st.hover?.08:0))st.drops.push({x:bx+Math.random()*bw,y:puddleY-4,v:0});
+  x.fillStyle='rgba(201,238,243,.8)';
+  st.drops=st.drops.filter(d=>{d.v+=.12;d.y+=d.v*.4;x.beginPath();x.arc(d.x,d.y,2,0,7);x.fill();return d.y<H});
+}
+
+// 霧
+const fog=document.getElementById('fog'),stall=document.getElementById('stall'),fx=fog.getContext('2d');
+function sizeFog(){const r=stall.getBoundingClientRect();fog.width=Math.round(r.width/2);fog.height=Math.round(r.height/2);
+  fx.fillStyle='rgba(180,205,210,.5)';fx.fillRect(0,0,fog.width,fog.height)}
+sizeFog();addEventListener('resize',sizeFog);
+stall.addEventListener('pointermove',e=>{const r=stall.getBoundingClientRect();
+  const px=(e.clientX-r.left)/2,py=(e.clientY-r.top)/2;
+  fx.save();fx.globalCompositeOperation='destination-out';
+  const g=fx.createRadialGradient(px,py,0,px,py,46);g.addColorStop(0,'rgba(0,0,0,.6)');g.addColorStop(1,'rgba(0,0,0,0)');
+  fx.fillStyle=g;fx.beginPath();fx.arc(px,py,46,0,7);fx.fill();fx.restore()});
+
+// 叫賣
+let callEl=null;
+function shout(st){
+  if(callEl)callEl.remove();
+  const line=st.s.calls[Math.floor(Math.random()*st.s.calls.length)];
+  callEl=document.createElement('div');callEl.className='call';
+  callEl.innerHTML=`「${line}」<small>試寫的叫賣，之後換成錄音</small>`;
+  const r=st.b.getBoundingClientRect(),sr=stall.getBoundingClientRect();
+  callEl.style.left=Math.max(8,Math.min(r.left-sr.left,sr.width-300))+'px';
+  callEl.style.top=Math.max(8,r.top-sr.top+10)+'px';
+  stall.append(callEl);const el=callEl;
+  setTimeout(()=>{el.style.opacity=0;setTimeout(()=>el.remove(),700)},3200);
+}
+
+// 主迴圈
+let last=performance.now(),fogTick=0;
+function frame(t){
+  const dt=Math.min(.1,(t-last)/1000);last=t;
+  state.forEach(st=>{
+    st.melt+=dt*(st.hover?.012:.0009);
+    if(st.hover)st.gazeSec+=dt;
+    if(st.melt>=1){st.melt=0;st.photo=(st.photo+1)%PHOTOS;st.cacheKey=''}
+    drawIce(st,t);
+    st.tag.textContent=(FULL*(1-st.melt*.92)).toFixed(1)+' 斤';
+    st.gz.textContent=st.gazeSec>.5?`你看了它 ${Math.round(st.gazeSec)} 秒`:'';
+  });
+  fogTick+=dt;
+  if(fogTick>.12){fogTick=0;fx.fillStyle='rgba(180,205,210,.012)';fx.fillRect(0,0,fog.width,fog.height)}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// 秤與帳簿
+const KEY='haishi-ledger-v1';
+const SAMPLES=[
+  {place:'新莊老家的頂樓',words:'曬衣服的鐵架，颱風前要先拆下來',w:3.2,ts:Date.now()-86400000*2,sample:true},
+  {place:'金瓜石的雨',words:'六年都沒乾過的鞋子',w:2.1,ts:Date.now()-86400000,sample:true},
+  {place:'奶奶的菜市場',words:'她跟賣魚的阿姨講話，從來不用講價',w:3.8,ts:Date.now()-3600000*5,sample:true},
+];
+let ledger=[];
+try{ledger=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){ledger=[]}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(ledger))}catch(e){}}
+function fmt(ts){const d=new Date(ts);return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function renderLedger(){
+  const all=[...ledger,...SAMPLES].sort((a,b)=>b.ts-a.ts),el=document.getElementById('ledger');el.innerHTML='';
+  all.forEach((e,i)=>{const d=document.createElement('div');d.className='entry';
+    d.style.opacity=Math.max(.35,1-i*.1);
+    const p=document.createElement('div');p.className='place';p.textContent=e.place;
+    const w=document.createElement('p');w.textContent=e.words;
+    const m=document.createElement('div');m.className='meta';
+    m.innerHTML=`<span>${e.w.toFixed(1)} 斤</span><span>${e.sample?'<span class="sample">範例</span>':fmt(e.ts)}</span>`;
+    d.append(p,w,m);el.append(d)});
+}
+renderLedger();
+
+const form=document.getElementById('tradeForm'),btn=document.getElementById('weighBtn');
+const plate=document.getElementById('plate'),needle=document.getElementById('needle'),readout=document.getElementById('readout');
+let waterTimer=null;
+form.addEventListener('submit',e=>{
+  e.preventDefault();
+  const place=document.getElementById('place').value.trim(),words=document.getElementById('words').value.trim();
+  if(!place||!words)return;
+  const w=Math.min(9.9,.8+(place.length+words.length)*.06);
+  btn.disabled=true;
+  plate.style.transform='translateY(10px)';needle.style.transform=`rotate(${w*30}deg)`;
+  let n=0;const start=performance.now();
+  (function count(t){n=Math.min(1,(t-start)/900);readout.innerHTML=(w*n).toFixed(1)+'<span>斤</span>';if(n<1)requestAnimationFrame(count)})(start);
+  setTimeout(()=>{
+    const ts=Date.now();ledger.unshift({place,words,w,ts});save();renderLedger();
+    const src=state[Math.floor(Math.random()*state.length)];
+    document.getElementById('r-place').textContent=place;
+    document.getElementById('r-weight').textContent=w.toFixed(1)+' 斤';
+    document.getElementById('r-out').textContent=`${src.s.name}融水一袋`;
+    document.getElementById('r-time').textContent=fmt(ts);
+    document.getElementById('receipt').hidden=false;
+    melting(src);
+    form.reset();btn.disabled=false;
+    setTimeout(()=>{plate.style.transform='';needle.style.transform='';readout.innerHTML='0.0<span>斤</span>'},2500);
+  },1100);
+});
+
+function melting(st){
+  const c=document.getElementById('r-water'),x=c.getContext('2d'),note=document.getElementById('r-note');
+  const img=st.photos[st.photo],sx=Math.random()*img.width*.4,sy=Math.random()*img.height*.3;
+  const t0=performance.now(),DUR=20000;
+  note.textContent='這袋融水會在二十秒內化掉，留不住';
+  if(waterTimer)cancelAnimationFrame(waterTimer);
+  (function step(t){const k=Math.min(1,(t-t0)/DUR);
+    x.clearRect(0,0,400,300);x.save();
+    x.filter=`blur(${k*10}px)`;x.globalAlpha=1-k;
+    x.drawImage(img,sx,sy,img.width*.6,img.height*.45,0,-k*40,400,300+k*80);
+    x.restore();
+    if(k<1)waterTimer=requestAnimationFrame(step);else note.textContent='已經化了。你寫的地方留在攤上了';
+  })(t0);
+}
+})();
+</script>
