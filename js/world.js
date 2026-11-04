@@ -28,7 +28,7 @@
   const scene = new T.Scene();
   const FOG = lin(.016, .02, .03);
   scene.fog = new T.FogExp2(FOG, .02);
-  const camera = new T.PerspectiveCamera(50, innerWidth / innerHeight, .3, 5000);
+  const camera = new T.PerspectiveCamera(42, innerWidth / innerHeight, .3, 5000);   // 接近人眼的視角
 
   const rtOpt = { type: T.HalfFloatType, minFilter: T.LinearFilter, magFilter: T.LinearFilter };
   let rtMain, rtA, rtB;
@@ -1681,29 +1681,50 @@
   /* ================= 相機 ================= */
   const cam = { target: new T.Vector3(0, 10, 0), theta: 0, phi: 1.54, radius: 170 };
   let fly = null;
-  function applyCam() {
-    const sp = Math.sin(cam.phi);
-    camera.position.set(cam.target.x + cam.radius * sp * Math.sin(cam.theta), cam.target.y + cam.radius * Math.cos(cam.phi), cam.target.z + cam.radius * sp * Math.cos(cam.theta));
-    if (camera.position.y < 2) camera.position.y = 2;
-    camera.lookAt(cam.target);
+  // 鏡頭的「想去的位置」由軌道參數算出（自己逛時拖曳、縮放改的是這組），真正的鏡頭用指數阻尼慢慢跟上，動起來有重量
+  const eye = new T.Vector3(), look = new T.Vector3(), wantEye = new T.Vector3(), wantLook = new T.Vector3();
+  let camReady = false;
+  const orbitEye = (o, out) => { const sp = Math.sin(o.phi); return out.set(o.target.x + o.radius * sp * Math.sin(o.theta), o.target.y + o.radius * Math.cos(o.phi), o.target.z + o.radius * sp * Math.cos(o.theta)); };
+  // 直式螢幕：視角稍微放寬，沿著視線往後退，兩側不被裁掉
+  // 近的鏡頭（巷子裡、攤前）不往後退，免得退到牆裡；越遠的鏡頭退得越多，三座島才放得進直式畫面
+  const portraitK = d => { const a = innerWidth / innerHeight; return a < 1 ? 1 + (1 - a) * 1.05 * smooth(30, 200, d) : 1; };
+  function fitLens() { const a = innerWidth / innerHeight; camera.fov = 42 + (a < 1 ? (1 - a) * 14 : 0); camera.aspect = a; camera.updateProjectionMatrix(); }
+  fitLens();
+  function applyCam(dt = 1 / 60, snap = false) {
+    if (fly) { const u = fly.e; fly.curveP.getPoint(u, wantEye); fly.curveT.getPoint(u, wantLook); }
+    else { orbitEye(cam, wantEye); wantLook.copy(cam.target); }
+    const k = portraitK(wantEye.distanceTo(wantLook)); if (k !== 1) wantEye.sub(wantLook).multiplyScalar(k).add(wantLook);
+    if (wantEye.y < 2) wantEye.y = 2;
+    if (snap || !camReady || reduce) { eye.copy(wantEye); look.copy(wantLook); camReady = true; }
+    else { const a = 1 - Math.exp(-(fly ? 3.4 : 6) * dt); eye.lerp(wantEye, a); look.lerp(wantLook, a); }
+    camera.position.copy(eye); camera.lookAt(look);
   }
+  // 換章：位置和看的地方各沿一條 Catmull-Rom 曲線走（tension .42），遠的航程中間抬高一點，像一口氣飛過去
   function flyTo(goal, dur = 3, then) {
     let dth = goal.theta - cam.theta; dth = Math.atan2(Math.sin(dth), Math.cos(dth));
-    fly = { t: 0, dur: reduce ? .01 : dur, then, from: { target: cam.target.clone(), theta: cam.theta, phi: cam.phi, radius: cam.radius },
-      to: { target: goal.target.clone(), theta: cam.theta + dth, phi: goal.phi, radius: goal.radius } };
+    const to = { target: goal.target.clone(), theta: cam.theta + dth, phi: goal.phi, radius: goal.radius };
+    const p0 = camReady ? eye.clone() : orbitEye(cam, new T.Vector3()), t0 = camReady ? look.clone() : cam.target.clone();
+    const p2 = orbitEye(to, new T.Vector3()), t2 = to.target.clone(), dist = p0.distanceTo(p2);
+    const p1 = p0.clone().lerp(p2, .5); p1.y += Math.min(160, dist * .16);
+    const t1 = t0.clone().lerp(t2, .5);
+    fly = { t: 0, e: 0, dur: reduce ? .01 : dur, then, to,
+      curveP: new T.CatmullRomCurve3([p0, p1, p2], false, 'catmullrom', .42), curveT: new T.CatmullRomCurve3([t0, t1, t2], false, 'catmullrom', .42) };
+  }
+  // 飛到一半被拖曳或縮放：從鏡頭現在的位置接手，不要彈回出發點
+  function stopFly() {
+    if (!fly) return; fly = null;
+    const off = eye.clone().sub(look), r = off.length() / portraitK(off.length());
+    cam.target.copy(look); cam.radius = r; cam.phi = Math.acos(Math.max(-1, Math.min(1, off.y / off.length()))); cam.theta = Math.atan2(off.x, off.z);
   }
   function stepFly(dt) {
-    if (!fly) return; fly.t += dt; const k = Math.min(1, fly.t / fly.dur), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
-    cam.target.lerpVectors(fly.from.target, fly.to.target, e);
-    cam.theta = fly.from.theta + (fly.to.theta - fly.from.theta) * e;
-    cam.phi = fly.from.phi + (fly.to.phi - fly.from.phi) * e;
-    cam.radius = fly.from.radius + (fly.to.radius - fly.from.radius) * e;
-    if (k >= 1) { const th = fly.then; fly = null; if (th) th(); }
+    if (!fly) return; fly.t += dt; const k = Math.min(1, fly.t / fly.dur);
+    fly.e = k * k * k * (k * (k * 6 - 15) + 10);           // smootherstep：起步和停下都很輕
+    if (k >= 1) { const th = fly.then, to = fly.to; Object.assign(cam, { theta: to.theta, phi: to.phi, radius: to.radius }); cam.target.copy(to.target); fly = null; if (th) th(); }
   }
   const V = (x, y, z, theta, phi, radius) => ({ target: new T.Vector3(x, y, z), theta, phi, radius });
   const VIEWS = {
     intro: V(0, 12, 0, 0, 1.54, 175),
-    longkou: V(0, 12, -8, .62, 1.3, 92),
+    longkou: V(.3, 2.9, 4, .02, 1.57, 20.4),        // 站在攤子後面、汀州路一段149巷口，人眼的高度，往又低又暗的巷子裡看
     overview: V(0, 0, -400, 0, .98, 900),
     stall: V(0, 3.9, 26, .06, 1.36, 19)
   };
@@ -1722,13 +1743,13 @@
     const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
     if (Math.hypot(e.clientX - p.sx, e.clientY - p.sy) > 5) dragged = true;
     if (!started) return;
-    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; cam.radius = Math.max(8, Math.min(1100, r0 * pinch0 / Math.hypot(a.x - b.x, a.y - b.y))); fly = null; userMoved = true; return; }
-    if (!dragged) return; fly = null; userMoved = true;
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; cam.radius = Math.max(8, Math.min(1100, r0 * pinch0 / Math.hypot(a.x - b.x, a.y - b.y))); stopFly(); userMoved = true; return; }
+    if (!dragged) return; stopFly(); userMoved = true;
     cam.theta -= dx * .004; cam.phi = Math.max(.35, Math.min(1.53, cam.phi - dy * .003));
   });
   const up = e => { const p = pointers.get(e.pointerId); pointers.delete(e.pointerId); if (p && !dragged && pointers.size === 0) pick(e.clientX, e.clientY); };
   el.addEventListener('pointerup', up); el.addEventListener('pointercancel', e => pointers.delete(e.pointerId));
-  el.addEventListener('wheel', e => { e.preventDefault(); if (!started) return; fly = null; userMoved = true; cam.radius = Math.max(8, Math.min(1100, cam.radius * (1 + e.deltaY * .001))); }, { passive: false });
+  el.addEventListener('wheel', e => { e.preventDefault(); if (!started) return; stopFly(); userMoved = true; cam.radius = Math.max(8, Math.min(1100, cam.radius * (1 + e.deltaY * .001))); }, { passive: false });
   addEventListener('keydown', e => {
     if (e.target.closest && e.target.closest('input,textarea')) return;
     if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
@@ -1766,20 +1787,23 @@
   const chList = $('chList');
   CH.forEach((c, i) => { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = `<span>${c.n}</span>${c.t}`; b.addEventListener('click', () => go(i)); chList.append(b); });
   let chapter = -1, started = false, free = false;
-  const target = { fog: .02, clear: 0, rate: 0, reveal: 0, breath: 0, haze: 1 };
-  const state = { fog: .02, clear: 0, rate: .05, reveal: 0, breath: 0, haze: 1 };
+  const target = { fog: .02, clear: 0, rate: 0, reveal: 0, breath: 0, haze: 1, expo: .92 };
+  const state = { fog: .02, clear: 0, rate: .05, reveal: 0, breath: 0, haze: 1, expo: .92 };
   function caption(i) {
     const c = CH[i], cap = $('caption');
     cap.classList.remove('on');
-    setTimeout(() => { $('capN').textContent = `${c.n}　${c.t}`; $('capMain').textContent = c.main; $('capSub').textContent = c.sub; cap.classList.add('on'); }, reduce ? 0 : 450);
+    setTimeout(() => { $('capN').textContent = `${c.n}　${c.t}`;
+      // 章節標題一個字一個字浮出來；螢幕報讀器照樣讀整句
+      $('capMain').setAttribute('aria-label', c.main); $('capMain').innerHTML = [...c.main].map((ch, k) => `<span aria-hidden="true" style="--k:${k}">${esc(ch)}</span>`).join('');
+      $('capSub').textContent = c.sub; cap.classList.add('on'); }, reduce ? 0 : 450);
     [...chList.children].forEach((b, k) => b.toggleAttribute('aria-current', k === i));
     $('prev').disabled = i <= 0; $('next').textContent = i >= CH.length - 1 ? '自己逛' : '下一段';
   }
   function go(i) {
     if (!started) { started = true; $('intro').classList.add('gone'); $('ui').hidden = false; }
-    chapter = i; caption(i); closePanel(); userMoved = false;
+    chapter = i; caption(i); closePanel(); userMoved = false; target.expo = i === 1 ? .74 : .92;
     if (i === 0) { Object.assign(target, { fog: .016, clear: .2, rate: .05, reveal: 0, breath: 0 }); flyTo(VIEWS.intro, 2.5); }
-    if (i === 1) { Object.assign(target, { fog: .009, clear: .45, rate: 1, reveal: 0, breath: 1 }); flyTo(VIEWS.longkou, 4.5); }
+    if (i === 1) { Object.assign(target, { fog: .034, clear: .35, rate: 1.6, reveal: 0, breath: 1 }); flyTo(VIEWS.longkou, 4.5); }   // 巷口濃一點的霧、暗一點：龍口在吐氣
     if (i === 2) { Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1 }); flyTo(VIEWS.overview, 5.5); }
     if (i === 3) { Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1 });
       flyTo(islandView('shezi', 110), 4.5, () => setTimeout(() => { if (chapter === 3 && !userMoved) flyTo(islandView('shezi', 16), 9); }, 2600)); }
@@ -1790,7 +1814,7 @@
   function setFree(on) {
     free = on; document.body.classList.toggle('free', on);
     $('tourBtn').setAttribute('aria-pressed', String(!on)); $('freeBtn').setAttribute('aria-pressed', String(on));
-    if (on) { $('caption').classList.remove('on'); Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1 }); flyTo(VIEWS.overview, 4); toast('拖曳轉動視角，滾輪或雙指縮放。<br>點海上的樓臺或攤上的冰。'); }
+    if (on) { $('caption').classList.remove('on'); Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1, expo: .92 }); flyTo(VIEWS.overview, 4); toast('拖曳轉動視角，滾輪或雙指縮放。<br>點海上的樓臺或攤上的冰。'); }
   }
   $('next').addEventListener('click', next); $('prev').addEventListener('click', prev);
   $('tourBtn').addEventListener('click', () => { setFree(false); go(0); });
@@ -2031,19 +2055,22 @@
     // 招牌與價牌等字型到了再畫，所以重新整理一次材質
     ices.forEach(i => { i.last = ''; });
     $('begin').disabled = false; $('begin').textContent = '開始';
-    applyCam(); requestAnimationFrame(loop);
+    applyCam(1 / 60, true); requestAnimationFrame(loop);
     const h = location.hash.slice(1);
     if (D.sites.some(s => s.id === h)) { go(2); setFree(true); setTimeout(() => goSite(h), 300); }
   });
 
   let lastNear = '', weightTick = 0, viewShift = 0;
+  let camPanT = null;
   function loop() {
     const raw = clock.getDelta(), dt = Math.min(.05, raw), t = clock.elapsedTime;
     const ease = 1 - Math.pow(.25, dt);
     for (const k in target) state[k] += (target[k] - state[k]) * ease * .6;
     scene.fog.density = state.fog; seaMat.uniforms.uDen.value = state.fog; seaMat.uniforms.uTime.value = t;
-    skyMat.uniforms.uClear.value = state.clear;
-    stepFly(Math.min(.25, raw)); applyCam();
+    skyMat.uniforms.uClear.value = state.clear; compMat.uniforms.uExpo.value = state.expo;
+    // 直式螢幕放不下三座樓臺：到了「二 樓臺」就慢慢左右掃過去，一座一座看
+    if (chapter === 2 && !free && !fly && !userMoved && innerWidth < innerHeight && !reduce) cam.target.x = Math.sin((t - (camPanT ??= t)) * .16) * 430; else camPanT = null;
+    stepFly(Math.min(.25, raw)); applyCam(dt);
 
     // 巷子盡頭的光，像呼吸一樣一明一暗
     const br = Math.sin(t * .6) * .5 + .5;
@@ -2110,11 +2137,12 @@
   }
 
   window.__haishi = { get flying() { return !!fly; }, scene, moonLight, LK,
+    get view() { return { eye: eye.toArray().map(v => +v.toFixed(1)), look: look.toArray().map(v => +v.toFixed(1)), orbit: { t: cam.target.toArray().map(v => +v.toFixed(1)), th: +cam.theta.toFixed(2), ph: +cam.phi.toFixed(2), r: +cam.radius.toFixed(1) } }; },
     // 測試用：直接把鏡頭放到某個位置
     set(tx, ty, tz, th, ph, r) { fly = null; cam.target.set(tx, ty, tz); cam.theta = th; cam.phi = ph; cam.radius = r; },
     island(id, r, dth = 0, ph = 1.3) { const v = islandView(id, r); this.set(v.target.x, v.target.y, v.target.z, v.theta + dth, ph, v.radius); } };
   addEventListener('resize', () => {
-    camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); makeTargets();
+    fitLens(); renderer.setSize(innerWidth, innerHeight); makeTargets();
     vMat.uniforms.uScale.value = innerHeight * DPR * .5; islands.forEach(is => { is.pm.uniforms.uScale.value = innerHeight * DPR * .5; });
   });
 })();
