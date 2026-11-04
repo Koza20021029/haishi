@@ -162,7 +162,15 @@
 
   /* ================= 材質貼圖 ================= */
   const corrugated = (col1, col2) => canvasTex(128, 128, (x, w, h) => { for (let i = 0; i < w; i += 8) { const g = x.createLinearGradient(i, 0, i + 8, 0); g.addColorStop(0, col1); g.addColorStop(.5, col2); g.addColorStop(1, col1); x.fillStyle = g; x.fillRect(i, 0, 8, h); }
-    for (let k = 0; k < 40; k++) { x.fillStyle = `rgba(80,50,30,${Math.random() * .18})`; x.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 10, 2 + Math.random() * 30); } });
+    for (let k = 0; k < 40; k++) { x.fillStyle = `rgba(80,50,30,${Math.random() * .18})`; x.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 10, 2 + Math.random() * 30); }
+    // 做舊：每片浪板深淺不一、換過的新板子、從螺絲往下流的鏽痕
+    for (let i = 0; i < w; i += 32) { const k = Math.random(); x.fillStyle = k < .3 ? 'rgba(0,0,0,.18)' : k > .85 ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,0)'; x.fillRect(i, 0, 32, h); }
+    for (let k = 0; k < 14; k++) { const sx = Math.random() * w, len = 18 + Math.random() * 70, gr = x.createLinearGradient(0, 0, 0, len);
+      gr.addColorStop(0, 'rgba(120,58,28,.55)'); gr.addColorStop(1, 'rgba(120,58,28,0)'); x.fillStyle = gr; x.save(); x.translate(0, Math.random() * h * .4); x.fillRect(sx, 0, 2 + Math.random() * 3, len); x.restore(); } });
+  // 牆腳的髒：越靠地面越暗，像假的環境光遮蔽，加上雨水往下流的黑痕
+  const grimeTex = canvasTex(64, 128, (x, w, h) => { x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+    const gr = x.createLinearGradient(0, h * .72, 0, h); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.55)'); x.fillStyle = gr; x.fillRect(0, 0, w, h);
+    for (let k = 0; k < 18; k++) { x.fillStyle = `rgba(30,28,24,${.08 + Math.random() * .14})`; x.fillRect(Math.random() * w, 0, 1 + Math.random() * 2, 10 + Math.random() * 60); } }, true);
   const roofTex = corrugated('#5d686c', '#8a9599'); roofTex.wrapS = roofTex.wrapT = T.RepeatWrapping; roofTex.repeat.set(10, 3);
   const shutterTex = canvasTex(128, 128, (x, w, h) => { x.fillStyle = '#8b9295'; x.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 6) { x.fillStyle = '#6b7275'; x.fillRect(0, y, w, 2); x.fillStyle = '#a4abad'; x.fillRect(0, y + 2, w, 1); }
     for (let k = 0; k < 30; k++) { x.fillStyle = `rgba(90,60,40,${Math.random() * .25})`; x.fillRect(Math.random() * w, Math.random() * h, 3, 4 + Math.random() * 30); } });
@@ -286,6 +294,7 @@
         }
       }
       dirt(x, w, h, 50, '50,35,20', .16);
+      const gb = x.createLinearGradient(0, h - 70, 0, h); gb.addColorStop(0, 'rgba(0,0,0,0)'); gb.addColorStop(1, 'rgba(0,0,0,.45)'); x.fillStyle = gb; x.fillRect(0, h - 70, w, 70);   // 一樓的牆腳比較暗
     });
     map.wrapT = T.RepeatWrapping;
     const emi = canvasTex(256, 512, (x, w, h) => { x.fillStyle = '#000'; x.fillRect(0, 0, w, h); lit.forEach(([wx, wy, ww, wh, on]) => { if (on) { x.fillStyle = '#ffb35c'; x.fillRect(wx, wy, ww, wh); x.fillStyle = '#000'; for (let k = 1; k < 9; k++) x.fillRect(wx - 7 + k * (ww + 12) / 9, wy, 3, wh); } }); });
@@ -988,14 +997,17 @@
   }
 
   /* ---------- 島上共用的房子 ---------- */
+  // 實拍照片當牆面：裁出需要的那一塊（repeat / offset 以照片的比例計），夜裡自己帶一點亮度
+  const photoTex = (src, rep, off) => { const t = new T.TextureLoader().load(src); t.encoding = T.sRGBEncoding; t.anisotropy = 4; t.repeat.set(rep[0], rep[1]); t.offset.set(off[0], off[1]); return t; };
+  const photoMat = (K, src, rep, off, lit = .5) => { const t = photoTex(src, rep, off); return K.reg(new T.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: lin(lit, lit * .95, lit * .88), emissiveIntensity: 1, roughness: .9 })); };
   function islandKit(mats) {
     const reg = m => { m.transparent = true; m.userData.base = m.opacity; mats.push(m); return m; };
     const facW = [0, 1, 2, 3, 4, 5].map(v => { const f = walkupTex(v); return reg(new T.MeshStandardMaterial({ map: f.map, emissiveMap: f.emi, emissive: lin(1.4, 1, .6), emissiveIntensity: 1, roughness: .85 })); });
     const facBoard = [0, 2, 4].map(v => { const f = walkupTex(v, true); return reg(new T.MeshStandardMaterial({ map: f.map, emissiveMap: f.emi, emissive: lin(1.4, 1, .6), emissiveIntensity: 1, roughness: .85 })); });
     const K = {
       reg, facW, facBoard,
-      wall: reg(new T.MeshStandardMaterial({ color: 0x6f6a62, roughness: .92 })),
-      wallW: reg(new T.MeshStandardMaterial({ color: 0xbab6aa, roughness: .9 })),
+      wall: reg(new T.MeshStandardMaterial({ color: 0x6f6a62, map: grimeTex, emissiveMap: grimeTex, emissive: new T.Color(0x6f6a62).multiplyScalar(.26), roughness: .92 })),
+      wallW: reg(new T.MeshStandardMaterial({ color: 0xbab6aa, map: grimeTex, emissiveMap: grimeTex, emissive: new T.Color(0xbab6aa).multiplyScalar(.26), roughness: .9 })),
       concrete: reg(new T.MeshStandardMaterial({ map: concreteTex, roughness: .9 })),
       tinBlue: reg(new T.MeshStandardMaterial({ map: tinTex('#355a75', '#5d86a2'), roughness: .5, metalness: .35 })),
       tinRust: reg(new T.MeshStandardMaterial({ map: tinTex('#6a4430', '#94654a'), roughness: .65, metalness: .3 })),
@@ -1083,7 +1095,10 @@
 
   /* ---------- 雙溪：淺山圍著的小鎮，兩條溪匯流，老街、三忠廟、宜蘭線 ---------- */
   // 地標牌：一條細光線往上，頂端掛名字。只在看得到日常樣子時出現
-  function pin(g, mats, text, x, z, top, base = 1.4) {
+  // 地名牌另外收在 pinSink，平常收起來，滑鼠移到島上或打開那個場域的側欄才浮出來
+  let pinSink = null;
+  function pin(g, mats0, text, x, z, top, base = 1.4) {
+    const mats = pinSink || mats0;
     const lm = new T.LineBasicMaterial({ color: lin(1.5, 1.2, .75), transparent: true, opacity: .6, toneMapped: false, depthWrite: false }); lm.userData.base = .6; mats.push(lm);
     const lg = new T.BufferGeometry(); lg.setAttribute('position', new T.Float32BufferAttribute([x, base, z, x, top, z], 3)); g.add(new T.LineSegments(lg, lm));
     const l = label(text, { size: 52, height: 2.5, color: '#f6e7c4', weight: 600 }); l.center.set(.5, 0); l.position.set(x, top + .35, z); l.material.userData.base = 1; mats.push(l.material); g.add(l);
@@ -1092,10 +1107,10 @@
   function buildShuangxi(g, K, pts, mats) {
     const mg = Merger();
     const grass = K.reg(new T.MeshStandardMaterial({ color: 0x27342b, roughness: 1 }));
-    const hillM = K.reg(new T.MeshStandardMaterial({ color: 0x1f3428, roughness: 1 }));
+    const hillMs = [0x1f3428, 0x243b2a, 0x1a2e26, 0x2a3a2c].map(c => K.reg(new T.MeshStandardMaterial({ color: c, roughness: 1 })));   // 山的綠深淺不一
     mg.put(grass, landGeo(SX_OUT));
     const HILLS = [[-26, -24, 17, 19], [-5, -33, 21, 25], [17, -29, 17, 21], [33, -12, 12, 15], [-37, -5, 11, 12], [35, 16, 8, 8], [-36, 19, 8, 7], [5, -44, 18, 28]];
-    HILLS.forEach(([x, z, r, h], i) => { hill(mg, hillM, x, z, r, h, i * 1.7); sample(pts, x, 1, z, r * 1.3, h * .7, r * 1.3, 110); });
+    HILLS.forEach(([x, z, r, h], i) => { hill(mg, hillMs[i % 4], x, z, r, h, i * 1.7); sample(pts, x, 1, z, r * 1.3, h * .7, r * 1.3, 110); });
     // 樹：山上一顆一顆的樹冠
     const trees = new T.InstancedMesh(new T.IcosahedronGeometry(1, 0), K.reg(new T.MeshStandardMaterial({ color: 0xffffff, roughness: 1 })), 520);
     const m4 = new T.Matrix4(), col = new T.Color(); let ti = 0;
@@ -1145,10 +1160,11 @@
         const [bx, bz] = P(0, sd * 1.95); mg.box(K.wallW, 11, .16, .3, bx, 2.7, bz, .38); mg.box(K.wallW, 11, .12, .26, bx, 2, bz, .38);
         [-5.5, 5.5].forEach(e => { const [qx, qz] = P(e, sd * 1.95); mg.block(K.wallW, .45, 1.1, .45, qx, 1.92, qz, .38); }); }); }
     // 河邊一層一層往後退的老公寓，陽台對著溪；旁邊一棟包紅鐵皮的
+    const riverFac = photoMat(K, 'images/shuangxi/1.jpg', [.46, .4], [.3, .2], .5);   // Koza 拍的沿溪老公寓
     { const X = 24, Z = 10.5, ry = -.69, P = rot(X, Z, ry), W = 10;
       [[0, 3, 9], [3, 2, 6], [5, 1, 3.4]].forEach(([f0, nf, d]) => { const [cx, cz] = P(0, -4.5 + d / 2), y0 = 1.4 + f0 * 3;
         mg.block(K.wall, W, nf * 3, d, cx, y0, cz, ry);
-        const [fx, fz] = P(0, -4.5 + d + .02); mg.put(K.facW[(f0 + 2) % 6], UNIT.plane, fx, y0 + nf * 1.5, fz, 0, ry, 0, W - .1, nf * 3, 1, [1, nf / 4]);
+        const [fx, fz] = P(0, -4.5 + d + .02); mg.put(f0 === 0 ? riverFac : K.facW[(f0 + 2) % 6], UNIT.plane, fx, y0 + nf * 1.5, fz, 0, ry, 0, W - .1, nf * 3, 1, f0 === 0 ? undefined : [1, nf / 4]);
         for (let f = 0; f < nf; f++) { const [sx, sz] = P(0, -4.5 + d + .55); mg.box(K.concrete, W, .16, 1.1, sx, y0 + f * 3 + 3, sz, ry); const [rx, rz] = P(0, -4.5 + d + 1.05); mg.box(K.wallW, W, .8, .1, rx, y0 + f * 3 + 3.48, rz, ry); }
         sample(pts, cx, y0, cz, W, nf * 3, d, Math.round(W * nf * 2.4)); });
       const [ox, oz] = P(W / 2 + 4, -1); const redTin = K.reg(new T.MeshStandardMaterial({ map: tinTex('#8a2a20', '#b0463a'), roughness: .5, metalness: .3 }));
@@ -1191,7 +1207,7 @@
         [[56, 360], [150, 360]].forEach(([x, y]) => { c.fillStyle = '#6f8f6a'; c.fillRect(x, y - 2, 52, 30); for (let k = 0; k < 14; k++) { c.fillStyle = ['#d9a441', '#b8342a', '#3d6c9a', '#e6dccb'][k % 4]; c.fillRect(x + 4 + Math.random() * 42, y + 2 + Math.random() * 22, 5, 5); } });
         c.fillStyle = '#f4f2ea'; c.fillRect(6, h - 92, w - 12, 72); c.strokeStyle = '#5e5a52'; c.lineWidth = 3; c.strokeRect(6, h - 92, w - 12, 72);
         c.fillStyle = '#141414'; c.font = '900 44px "Noto Serif TC"'; c.textAlign = 'center'; c.fillText('林 益 和 藥 房', w / 2, h - 40); c.fillStyle = '#b8342a'; c.font = '700 13px "Noto Serif TC"'; c.fillText('丙申年蒲月', w - 30, h - 74); });
-      const ylM = K.reg(new T.MeshStandardMaterial({ map: ylTex, emissiveMap: ylTex, emissive: lin(.55, .45, .3), emissiveIntensity: 1, roughness: .85 }));
+      const ylM = photoMat(K, 'images/shuangxi/2.jpg', [.5, .96], [.12, .02], .62);   // Koza 拍的林益和藥房正面（畫的版本 ylTex 留著備用）
       mg.put(ylM, UNIT.plane, -14, 5.6, 13.38, 0, Math.PI, 0, 4.4, 8.4, 1); mg.box(K.wallW, 4.6, .5, .5, -14, 9.9, 13.5); mg.put(K.wallW, UNIT.cyl6, -14, 10.15, 13.5, Math.PI / 2, 0, 0, 2, .4, 2);
       mg.box(K.wallW, 2.2, .22, .75, -14, 6.15, 13.0); mg.box(K.wallW, 2.2, .7, .1, -14, 6.6, 12.65); mg.box(K.wallW, .1, .7, .75, -15.1, 6.6, 13.0); mg.box(K.wallW, .1, .7, .75, -12.9, 6.6, 13.0);   // 彎彎的小陽台
       mg.box(K.wallW, 4.6, .35, .9, -14, 2.9, 13.0); }
@@ -1241,6 +1257,7 @@
     rm.userData.base = 1; rm.opacity = 1; mats.push(rm);
     const rain = new T.LineSegments(rg, rm); rain.frustumCulled = false; g.add(rain);
     // 山腰的霧
+    HILLS.forEach(([x, z, r, h], i) => { for (let k = 0; k < 3; k++) { const a = i * 1.3 + k * 2.1, m = glow(lin(.55, .6, .64), r * 1.6, .055); m.material.blending = T.NormalBlending; m.position.set(x + Math.cos(a) * r * .7, h * .32 + k * .6, z + Math.sin(a) * r * .7); g.add(m); mats.push(Object.assign(m.material, { userData: { base: .055 } })); } });   // 山腰一層低低的霧帶
     HILLS.slice(0, 5).forEach(([x, z, r, h]) => { const m = glow(lin(.5, .55, .6), r * 1.5, .07); m.material.blending = T.NormalBlending; m.position.set(x, h * .7, z - r * .1); g.add(m); mats.push(Object.assign(m.material, { userData: { base: .07 } })); });
     g.userData.anim = (t, dt) => {
       rm.uniforms.uT.value = t; rm.uniforms.uA.value = rm.opacity * (reduce ? .5 : 1);
@@ -1302,6 +1319,7 @@
     for (let x = -41; x < 41; x += 2.4) mg.box(redM, 1.4, .1, .22, x, 1.5, -16.5);
 
     // 騎樓透天：一樓縮進去，門窗封木板、噴編號
+    const houseFac = photoMat(K, 'images/hangkong/3.jpg', [.42, .42], [.27, .52], .55); let usedHouse = false;   // Koza 拍的還有人住的老屋
     function arcadeHouse(x, z, w, d, floors, ry, state) {
       const P = rot(x, z, ry), G = 1.4, GF = 3.2, H = (floors - 1) * 3;
       let [px, pz] = P(0, -1); mg.block(K.wall, w, GF, d - 2, px, G, pz, ry);
@@ -1311,7 +1329,7 @@
       if (state === 'lit') mg.put(shopM, UNIT.plane, px, G + GF / 2, pz, 0, ry, 0, w - .5, GF - .3, 1);
       else mg.put(codeM, UNIT.plane, px, G + GF / 2, pz, 0, ry, 0, w - .5, GF - .3, 1, [1 / 8, 1, Math.floor(rnd() * 8) / 8, 0]);
       [px, pz] = P(0, d / 2 + .02);
-      const fac = state === 'lit' ? K.facW[Math.floor(rnd() * 6)] : K.facBoard[Math.floor(rnd() * 3)];
+      const fac = state === 'lit' ? (!usedHouse && (usedHouse = true) ? houseFac : K.facW[Math.floor(rnd() * 6)]) : K.facBoard[Math.floor(rnd() * 3)];
       mg.put(fac, UNIT.plane, px, G + GF + H / 2, pz, 0, ry, 0, w - .05, H, 1, [1, (floors - 1) / 4]);
       facadeBits(mg, K, P, w, d, G + GF, floors - 1, ry);
       if (state === 'lit' || rnd() < .18) {           // 還住著人的：門口撐兩把陽傘、排一列瓦斯桶
@@ -1355,6 +1373,7 @@
     } });
     // 福海宮：關上大門，廟頂的福祿壽，廟埕堆著家具
     temple(mg, K, pts, -14, SZ - 9.5, 8.5, 6.5, 0, true);
+    mg.put(photoMat(K, 'images/hangkong/1.jpg', [.66, .48], [.32, .06], .55), UNIT.plane, -14, 4.2, SZ - 9.5 + 3.28, 0, 0, 0, 8.4, 4.5, 1);   // Koza 拍的廟正面：石雕的柱、彩繪的門
     mg.block(K.concrete, 11, .06, 4.6, -14, 1.41, SZ - 4.2);
     [-1.6, 0, 1.6].forEach((dx, k) => { const c = [0xd8a530, 0xb8342a, 0x3d6a4a][k]; const m = K.reg(new T.MeshStandardMaterial({ color: c, roughness: .6 }));
       mg.cyl(m, .32, 1.1, -14 + dx, 1.9 + 4.6 + 3.3, SZ - 9.5); mg.put(K.wallW, UNIT.ico, -14 + dx, 1.9 + 4.6 + 4.7, SZ - 9.5, 0, 0, 0, .55, .55, .55); });
@@ -1467,7 +1486,7 @@
     [['竹圍', -18, 14, 27], ['海口', 26, 14, 27], ['沙崙', 14, 14, -6]].forEach(([t, x, y, z]) => { const l = label(t, { size: 56, height: 2.6, color: '#e9e4d6' }); l.position.set(x, y, z); g.add(l); l.material.userData.base = .85; l.material.opacity = .85; mats.push(l.material); });
     // 進場燈：一排往跑道跑的閃光
     const appr = []; for (let k = 0; k < 14; k++) { const s = glow(lin(3, 3, 3.3), 2.2, 0); s.position.set(50 + k * 3.2, 1.2, -23); g.add(s); appr.push(s); mats.push(Object.assign(s.material, { userData: { base: 1 } })); }
-    for (let k = -46; k <= 46; k += 6) [-26, -20].forEach(z => { const s = glow(lin(1.6, 1.4, .8), 1.2, .8); s.position.set(k, 1.6, z); g.add(s); mats.push(Object.assign(s.material, { userData: { base: .8 } })); });
+    const rwl = []; for (let k = -46; k <= 46; k += 6) [-26, -20].forEach(z => { const s = glow(lin(1.6, 1.4, .8), 1.2, .8); s.position.set(k, 1.6, z); g.add(s); s.userData.k = k; rwl.push(s.material); mats.push(Object.assign(s.material, { userData: { base: .8, k } })); });   // 跑道邊燈：一道慢慢往跑道頭跑的亮
     [[-12, 3.5, -5.2], [-14, 3.4, SZ - 5.6], [-37.5, 3, -2.6], [1.6, 3, SZ + 3.6]].forEach(([x, y, z]) => { const s = glow(lin(1.4, .7, .3), 1.6, .8); s.position.set(x, y, z); g.add(s); mats.push(Object.assign(s.material, { userData: { base: .8 } })); });
     // 飛機：從海上壓低進場，掠過屋頂，落在跑道上
     const pm = K.reg(new T.MeshStandardMaterial({ color: 0xdfe4ea, roughness: .35, metalness: .3 })), tailM = K.reg(new T.MeshStandardMaterial({ color: 0x2c4f86, roughness: .4 }));
@@ -1492,6 +1511,7 @@
       plane.position.set(x, y + 1.1, -23); plane.rotation.set(0, Math.PI, u < .55 ? -.05 : 0);
       plane.visible = u < .82; strobe.visible = (t * 1.1) % 1 < .07;
       const ph = (t * 1.6) % 1; appr.forEach((s, k) => { const on = Math.abs(ph - (1 - k / appr.length)) < .07; s.scale.setScalar(on ? 5 : 1.4); });
+      rwl.forEach(m => { m.userData.base = .35 + .55 * Math.pow(.5 + .5 * Math.sin(t * .9 - m.userData.k * .06), 3); });
       birds.rotation.y = t * .12; birds.children.forEach(b => { b.position.y += Math.sin(t * 2 + b.userData.ph) * .004; b.scale.x = .7 + Math.abs(Math.sin(t * 6 + b.userData.ph)) * .5; });
     };
   }
@@ -1503,7 +1523,8 @@
     const ground = K.reg(new T.MeshStandardMaterial({ color: 0x2b302b, roughness: 1 }));
     mg.put(ground, landGeo(inner));
     const leveeTex = canvasTex(256, 64, (c, w, h) => { c.fillStyle = '#7a8285'; c.fillRect(0, 0, w, h); for (let k = 0; k < w; k += 32) { c.fillStyle = '#5f676a'; c.fillRect(k, 0, 2, h); } c.fillStyle = '#9aa2a4'; c.fillRect(0, 0, w, 5);
-      for (let k = 0; k < 120; k++) { c.fillStyle = `rgba(30,40,35,${Math.random() * .35})`; c.fillRect(Math.random() * w, h * .45 + Math.random() * h * .55, 1 + Math.random() * 3, 3 + Math.random() * 14); } });
+      for (let k = 0; k < 120; k++) { c.fillStyle = `rgba(30,40,35,${Math.random() * .35})`; c.fillRect(Math.random() * w, h * .45 + Math.random() * h * .55, 1 + Math.random() * 3, 3 + Math.random() * 14); }
+      for (let k = 0; k < 70; k++) { const len = 8 + Math.random() * 46, gx = Math.random() * w, gr = c.createLinearGradient(0, 5, 0, 5 + len); gr.addColorStop(0, 'rgba(18,22,20,.5)'); gr.addColorStop(1, 'rgba(18,22,20,0)'); c.fillStyle = gr; c.fillRect(gx, 5, 1 + Math.random() * 2.5, len); } });   // 堤防上雨水流下來的黑痕
     leveeTex.wrapS = leveeTex.wrapT = T.RepeatWrapping; leveeTex.repeat.set(.12, .14);
     mg.put(K.reg(new T.MeshStandardMaterial({ map: leveeTex, emissiveMap: leveeTex, emissive: lin(.12, .13, .14), emissiveIntensity: 1, roughness: .9 })), landGeo(SHEZI_OUT, 5.2, 6.4, [inner.slice().reverse()]));
     // 堤外的泥灘與蘆葦
@@ -1524,6 +1545,7 @@
     sheds.forEach(([x, z, l, s]) => { const h = 3.6 + rnd() * 1.6, wm = tins[Math.floor(rnd() * 3)], rm = tins[Math.floor(rnd() * 3)];
       mg.block(wm, l, h, s, x, 1.4, z, 0, [l / 3, 1]); mg.prism(rm, l + .6, s + .8, 1.4 + rnd() * .6, x, 1.4 + h, z);
       if (rnd() < .5) mg.put(litDoor, UNIT.plane, x + (rnd() - .5) * l * .4, 1.4 + 1.5, z + (z < 0 ? s / 2 + .02 : -s / 2 - .02), 0, z < 0 ? 0 : Math.PI, 0, 3, 3, 1);
+      if (rnd() < .45) { const lt = glow(lin(1.5, 1.05, .55), 2, .8); lt.position.set(x + (rnd() - .5) * l * .5, 1.4 + h * .55, z + (z < 0 ? s / 2 + .3 : -s / 2 - .3)); g.add(lt); mats.push(Object.assign(lt.material, { userData: { base: .8 } })); }   // 工廠零星亮著的燈
       sample(pts, x, 1.4, z, l, h + 1.5, s, Math.round(l * h * .5)); });
     // 生鏽的儲油槽
     const rustTank = K.reg(new T.MeshStandardMaterial({ map: rep(corrugated('#6a4a36', '#8a6448'), 3, 1), roughness: .7, metalness: .4 }));
@@ -1559,7 +1581,18 @@
       mg.box(deck, 7, .9, 68, 22, 9.4, -46); for (let z = -20; z > -82; z -= 11) mg.block(deck, 1.6, 9, 1.6, 22, -1, z);
       [-1, 1].forEach(e => mg.box(K.wallW, .2, .9, 68, 22 + e * 3.4, 10.3, -46));
       mg.block(deck, 7, 8, 4, 22, 1.4, -11);
-      for (let z = -16; z > -78; z -= 12) { const s = glow(lin(1.5, 1.1, .6), 2.4, .85); s.position.set(22 + 3.2, 12, z); g.add(s); mats.push(Object.assign(s.material, { userData: { base: .85 } })); } }
+      for (let z = -16; z > -78; z -= 12) { const s = glow(lin(1.5, 1.1, .6), 2.4, .85); s.position.set(22 + 3.2, 12, z); g.add(s); mats.push(Object.assign(s.material, { userData: { base: .85 } })); }
+      // 照夜裡的照片：一根往北斜的白色主塔，斜張鋼索像扇子攤開，整座打著紫光
+      const towerM = K.reg(new T.MeshStandardMaterial({ color: 0xc9ccd6, roughness: .5, emissive: lin(.1, .07, .16), emissiveIntensity: 1 }));
+      const base = [22, 9.9, -40], top = [22, 50, -60];
+      rod(mg, towerM, base, top, 1.1); rod(mg, towerM, [22, 9.9, -38], [22, 22, -44], 1.5);
+      const cl = []; for (let k = 0; k < 11; k++) { const u = .42 + k * .055, px = base[0], py = base[1] + (top[1] - base[1]) * u, pz = base[2] + (top[2] - base[2]) * u, dz = -22 - k * 3.6;
+        [-3.1, 3.1].forEach(e => cl.push(px, py, pz, 22 + e, 9.9, dz)); }
+      const cg = new T.BufferGeometry(); cg.setAttribute('position', new T.Float32BufferAttribute(cl, 3));
+      const cm = new T.LineBasicMaterial({ color: lin(.95, .55, 1.4), transparent: true, opacity: .7, toneMapped: false, depthWrite: false }); cm.userData.base = .7; mats.push(cm); g.add(new T.LineSegments(cg, cm));
+      [[22, 12, -40.5, 9, .6], [22, 49, -60, 4, .5]].forEach(([x, y, z, sz, op]) => { const v = glow(lin(.8, .28, 1.4), sz, op); v.position.set(x, y, z); g.add(v); mats.push(Object.assign(v.material, { userData: { base: op } })); });
+      // 紫光倒映在河面上：拉長的一條
+      { const r = glow(lin(.9, .3, 1.5), 10, .32); r.scale.set(9, 46, 1); r.position.set(22, .6, -43); g.add(r); mats.push(Object.assign(r.material, { userData: { base: .32 } })); } }
     // 堤防上的布條：社子島自救會
     const banTex = canvasTex(512, 96, (c, w, h) => { c.fillStyle = '#3f9a3c'; c.fillRect(0, 0, w, h); c.fillStyle = '#f4f2ea'; c.font = '900 60px "Noto Sans TC"'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('社子島自救會', w / 2, h / 2 + 2); dirt(c, w, h, 30, '20,40,20', .3, [2, 8], [4, 30]); });
     const banM = K.reg(new T.MeshStandardMaterial({ map: banTex, emissiveMap: banTex, emissive: lin(.35, .4, .35), emissiveIntensity: 1, roughness: .9, side: T.DoubleSide }));
@@ -1605,20 +1638,49 @@
 
   function buildDaily(def) {
     const g = new T.Group(), mats = [], pts = [];
+    pinSink = [];
     const K = islandKit(mats);
     if (def.id === 'shuangxi') buildShuangxi(g, K, pts, mats);
     if (def.id === 'hangkong') buildHangkong(g, K, pts, mats);
     if (def.id === 'shezi') buildShezi(g, K, pts, mats);
     // 放大以後離月光遠，給沒有貼圖的牆、屋頂一點自己的亮度，夜裡也看得出形狀
-    mats.forEach(m => { if (m.isMeshStandardMaterial && !m.map && !m.emissiveMap && m.emissive.getHex() === 0) m.emissive.copy(m.color).multiplyScalar(.26); });
-    return { g, mats, pts };
+    mats.forEach(m => { if (!m.isMeshStandardMaterial || m.map || m.emissiveMap || m.emissive.getHex() !== 0) return;
+      if (m.color.r > .98 && m.color.g > .98 && m.color.b > .98) {   // 白色在色彩管理下會變成 fefefe，不能用 === 0xffffff 判斷         // 樹、油桶這類靠 instanceColor 上色的：補光也要乘上各自的顏色，不然每一面都發白
+        m.emissive.setScalar(.26); m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n#if defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )\ntotalEmissiveRadiance *= vColor.rgb;\n#endif'); };
+      } else m.emissive.copy(m.color).multiplyScalar(.26); });
+    const pins = pinSink; pinSink = null;
+    return { g, mats, pts, pins };
   }
 
+  /* ---------- 島的水邊：一圈石頭、一條白浪、貼著水面的低水氣（只在看得到日常樣子時出現） ---------- */
+  const foamTex = (() => { const t = canvasTex(256, 32, (c, w, h) => { c.clearRect(0, 0, w, h);
+    for (let k = 0; k < 520; k++) { const x = Math.random() * w, y = Math.pow(Math.random(), 1.6) * h, r = .6 + Math.random() * 2.2; c.fillStyle = `rgba(255,255,255,${(.25 + Math.random() * .6) * (1 - y / h)})`; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); } }, false);
+    t.wrapS = T.RepeatWrapping; return t; })();
+  const shoreAnims = [];
+  function shoreline(g, mats, pts, { rocks = true, from = .2, to = 3.2 } = {}) {
+    const inA = offsetIn(pts, -from), inB = offsetIn(pts, -to), pos = [], uv = [], idx = []; let L = 0;
+    for (let i = 0; i <= pts.length; i++) { const a = inA[i % pts.length], b = inB[i % pts.length]; if (i) { const q = inA[(i - 1) % pts.length]; L += Math.hypot(a[0] - q[0], a[1] - q[1]); }
+      pos.push(a[0], .55, a[1], b[0], .55, b[1]); uv.push(L / 14, 1, L / 14, 0); if (i < pts.length) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); } }
+    const fg = new T.BufferGeometry(); fg.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); fg.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); fg.setIndex(idx);
+    const fm = new T.MeshBasicMaterial({ map: foamTex.clone(), color: lin(.55, .62, .68), transparent: true, opacity: .55, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide, toneMapped: false });
+    fm.map.needsUpdate = true; fm.userData.base = .55; mats.push(fm); g.add(new T.Mesh(fg, fm)); shoreAnims.push(fm);
+    if (rocks) { const ring = offsetIn(pts, -.9), n = ring.length * 5, rm = new T.MeshStandardMaterial({ color: 0x3c3f3c, roughness: 1, emissive: 0x111312 }); rm.transparent = true; rm.userData.base = 1; mats.push(rm);
+      const im = new T.InstancedMesh(new T.IcosahedronGeometry(1, 0), rm, n), m4 = new T.Matrix4(), q = new T.Quaternion(), e = new T.Euler(), sc = new T.Vector3(), v = new T.Vector3();
+      for (let i = 0; i < n; i++) { const a = ring[Math.floor(i / 5)], b = ring[(Math.floor(i / 5) + 1) % ring.length], u = (i % 5) / 5 + rnd() * .2, s0 = .5 + rnd() * 1.1;
+        v.set(a[0] + (b[0] - a[0]) * u + (rnd() - .5) * 1.4, .35 + rnd() * .5, a[1] + (b[1] - a[1]) * u + (rnd() - .5) * 1.4); q.setFromEuler(e.set(rnd() * 3, rnd() * 3, rnd() * 3)); sc.set(s0 * 1.3, s0 * .7, s0);
+        im.setMatrixAt(i, m4.compose(v, q, sc)); }
+      g.add(im); }
+    // 貼著水面的低水氣
+    for (let k = 0; k < pts.length; k += Math.ceil(pts.length / 9)) { const [x, z] = offsetIn([pts[k], pts[(k + 1) % pts.length], pts[(k + 2) % pts.length]], -4)[1], m = glow(lin(.6, .65, .72), 22, .06);
+      m.material.blending = T.NormalBlending; m.position.set(x, 1.6, z); g.add(m); mats.push(Object.assign(m.material, { userData: { base: .06 } })); }
+  }
   function buildIsland(def, ii) {
     const site = S(def.id), root = new T.Group(); root.position.copy(def.pos); root.scale.setScalar(ISC); scene.add(root);
     const dir = def.pos.clone().negate().setY(0).normalize(); root.rotation.y = Math.atan2(dir.x, dir.z);   // 正面朝龍口
     const R = buildRender(def, ii), Dl = buildDaily(def, ii);
     root.add(R.g, Dl.g);
+    if (def.id === 'shezi') shoreline(Dl.g, Dl.mats, scaleOut(SHEZI_OUT, 1.2), { rocks: false, from: .1, to: 2.6 });   // 泥灘外緣的白浪
+    else shoreline(Dl.g, Dl.mats, OUTLINE[def.id]);
     // 散：水氣粒子
     const P = new Float32Array(Dl.pts), seeds = new Float32Array(Dl.pts.length);
     for (let k = 0; k < seeds.length; k++) seeds[k] = rnd();
@@ -1644,7 +1706,8 @@
       if (o.material.color) o.material.color.multiply(lin(.62, .72, .95));
       o.material.userData.base = o.material.opacity * .5; ghostMats.push(o.material); });
     ghost.scale.y = -.7; root.add(ghost);
-    const isl = { def, site, root, R, Dl, cloud, pm, name, hit, near: false, ghost, ghostMats, ghostTop: R.maxH + 1.4 };
+    Dl.pins.forEach(m => { m.userData.base = m.userData.base ?? m.opacity; });
+    const isl = { def, site, root, R, Dl, cloud, pm, name, hit, near: false, ghost, ghostMats, ghostTop: R.maxH + 1.4, pins: Dl.pins, pinK: 0 };
     islands.push(isl); return isl;
   }
   const setOp = (list, k) => list.forEach(m => { m.opacity = m.userData.base * k; m.visible = k > .01; });
@@ -1774,6 +1837,7 @@
     ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
     const h = ray.intersectObjects(ices.filter(i => i.stall).map(i => i.shell), false);
     el.style.cursor = h.length ? 'pointer' : '';
+    const hi = ray.intersectObjects(islands.map(i => i.hit), false); hoverSite = hi.length ? hi[0].object.userData.site : null;
   });
 
   /* ================= 導覽 ================= */
@@ -1845,7 +1909,9 @@
     }
     return wrap;
   }
+  let hoverSite = null, panelSite = null;
   function openPanel(id) {
+    panelSite = id;
     const s = S(id), body = $('panelBody');
     nav.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.site === id)));
     body.innerHTML = `<div class="p-head"><h2>${s.name}</h2><div class="p-meta">${s.role}<br>${esc(s.where)}</div></div>
@@ -1878,7 +1944,7 @@
     $('phase').textContent = preview === null ? st.phase : `預覽：化了 ${Math.round(st.p * 100)}%`;
     document.querySelectorAll('.icecard .kg').forEach(k => { k.textContent = `${st.weight.toFixed(1)} 斤`; });
   }
-  function closePanel() { $('panel').classList.remove('open'); document.body.classList.remove('panel-open'); nav.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false')); }
+  function closePanel() { panelSite = null; $('panel').classList.remove('open'); document.body.classList.remove('panel-open'); nav.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false')); }
   $('closePanel').addEventListener('click', closePanel);
 
   /* ================= 攤上買賣：叫賣、挑冰、上秤、成交 =================
@@ -2076,6 +2142,7 @@
     // 巷子盡頭的光，像呼吸一樣一明一暗
     const br = Math.sin(t * .6) * .5 + .5;
     breath.material.opacity = (.12 + br * .22) * state.breath;
+    if (!reduce) shoreAnims.forEach((m, i) => { m.map.offset.x = t * .012 * (i % 2 ? 1 : -1); m.map.offset.y = Math.sin(t * .7 + i) * .08; });   // 白浪慢慢沿著岸邊走、一進一退
     updateVapor(dt, t, state.rate);
     updateIces(t);
     const pNow = window.HaishiIce(preview).p; ices.forEach((ice, i) => { if (ice.needle) ice.needle.rotation.z = (1 - pNow) * -2 + 1 + Math.sin(t * 3 + i) * .015; });
@@ -2091,6 +2158,7 @@
       const scat = 1 - smooth(13, 42, d);
       const dA = (1 - smooth(135, 240, d)) * (1 - smooth(.2, .75, scat)) * rv;
       setOp(is.R.mats, rA); setOp(is.Dl.mats, dA); 
+      is.pinK += ((hoverSite === is.site.id || panelSite === is.site.id ? 1 : 0) - is.pinK) * ease; setOp(is.pins, dA * is.pinK);
       { const flick = reduce ? .6 : smooth(.15, .85, (Math.sin(t * .19 + i * 2.1) * .5 + .5) * (Math.sin(t * .47 + i * 1.3) * .35 + .65));
         const sq = reduce ? .7 : .55 + Math.sin(t * .31 + i) * .2 + Math.sin(t * .83 + i * 3) * .05, top = is.ghostTop;
         setOp(is.ghostMats, rA * flick); is.ghost.visible = rA * flick > .01;

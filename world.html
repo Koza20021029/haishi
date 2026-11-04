@@ -17,12 +17,12 @@ button { font: inherit; color: inherit; cursor: pointer; background: none; borde
 .hud { position: fixed; z-index: 5; }
 /* 近處的前景：Koza 照片裡切出來的收納箱、招牌、燈籠、腳踏車，貼在鏡頭前、有點失焦。只在那一章出現 */
 .fg { position: fixed; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
-.fg img { position: absolute; display: block; height: auto; opacity: 0; translate: 0 16%; --b: 2px; --lit: .5;
-  filter: brightness(var(--lit)) saturate(.8) blur(8px); transition: opacity .7s ease, translate .9s cubic-bezier(.2,.7,.2,1), filter .7s ease; }
-.fg[data-on="1"] img[data-ch="1"], .fg[data-on="4"] img[data-ch="4"] { opacity: 1; translate: 0 0; filter: brightness(var(--lit)) saturate(.8) blur(var(--b));
+.fg img { position: absolute; display: block; height: auto; opacity: 0; translate: 0 16%; --b: 2px; --lit: .5; --tone: sepia(0);
+  filter: brightness(var(--lit)) saturate(.8) var(--tone) blur(8px); transition: opacity .7s ease, translate .9s cubic-bezier(.2,.7,.2,1), filter .7s ease; }
+.fg[data-on="1"] img[data-ch="1"], .fg[data-on="4"] img[data-ch="4"] { opacity: 1; translate: 0 0; filter: brightness(var(--lit)) saturate(.8) var(--tone) blur(var(--b));
   transition-delay: calc(var(--i) * 90ms + 900ms); }
-.fg .drawers { left: -2.5vw; bottom: -3vh; height: 80vh; width: auto; --b: 1.6px; --lit: .42; }
-.fg .sign { right: 15vw; top: -1.5vh; width: clamp(150px, 15vw, 250px); rotate: -2deg; --b: 1.2px; --lit: .55; translate: 0 -16%; }
+.fg .drawers { left: -2.5vw; bottom: -3vh; height: 80vh; width: auto; --b: 1.6px; --lit: .3; --tone: saturate(.55) sepia(.45) hue-rotate(-8deg); }
+.fg .sign { right: 15vw; top: 3vh; width: clamp(150px, 15vw, 250px); rotate: -2deg; --b: 1.2px; --lit: .5; --tone: sepia(.25); translate: 0 -16%; }
 .fg .lantern { left: 33vw; top: -2vh; width: clamp(54px, 5vw, 86px); --b: 2.4px; --lit: .9; translate: 0 -16%; }
 .fg .bike { left: 37vw; bottom: -2vh; height: 34vh; width: auto; --b: 2.2px; --lit: .5; }
 .fg .basket { left: 31vw; bottom: -1vh; width: clamp(90px, 9vw, 150px); --b: 2.6px; --lit: .55; }

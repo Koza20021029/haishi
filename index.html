@@ -262,6 +262,8 @@ h1.g .sr { font-size: 1px; }
 
 
   function size() {
+    // 視窗或容器還沒有大小時（背景分頁、剛載入）先不畫，免得拿寬或高為 0 的畫布去 drawImage
+    if (!cv.clientWidth || !cv.clientHeight || !cc.clientWidth || !cc.clientHeight) return false;
     W = cv.width = Math.round(cv.clientWidth * DPR); H = cv.height = Math.round(cv.clientHeight * DPR);
     CW = cc.width = Math.round(cc.clientWidth * DPR); CH = cc.height = Math.round(cc.clientHeight * DPR);
     s = 11; art = makeArt(); ghost = makeGhost(art);
@@ -299,6 +301,7 @@ h1.g .sr { font-size: 1px; }
   }
 
   function draw(t) {
+    if (!art || !art.width || !art.height) { if (size() === false) { requestAnimationFrame(draw); return; } }
     if (t0 === null) t0 = t;
     const rise = reduce ? 1 : ease((t - t0 - 500) / 2400);
     // 地平線慢慢跟上游標；沒有游標時（手機）自己輕輕呼吸
