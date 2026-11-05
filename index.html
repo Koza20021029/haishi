@@ -40,7 +40,9 @@ a { color: inherit; text-decoration: none; }
 
 /* 線下：龍口市場的巷口 */
 .market { position: absolute; inset: 0; display: block; clip-path: inset(50% 0 0 0); will-change: clip-path; background: #0d1110; }
-.market .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; filter: brightness(.52) saturate(.85) contrast(1.05); }
+.market .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 58%; filter: brightness(.5) saturate(.8) contrast(1.06) blur(1.2px); transform-origin: 50% 62%; transition: transform 1.1s cubic-bezier(.5,0,.2,1), filter 1.1s ease; }
+/* 巷口暗角：視線停在招牌，不被最亮的地面搶走 */
+.market .vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 70% 60% at 62% 45%, rgba(8,10,10,0) 30%, rgba(8,10,10,.72) 100%); }
 .market .wet { position: absolute; left: 0; right: 0; top: 50%; height: 50%; will-change: transform; }
 .market .wet canvas { width: 100%; height: 100%; display: block; mix-blend-mode: screen; }
 
@@ -54,8 +56,20 @@ h1.g .sr { font-size: 1px; }
 .g-shi { pointer-events: none; }
 .g { position: absolute; z-index: 5; line-height: 1; font-size: var(--glyph); will-change: transform; }
 .g-hai { left: max(var(--m), calc(50% - var(--glyph) * 1.25)); top: 50%; translate: 0 -88%; color: var(--pearl); filter: url(#heat); }
+/* 「海」越往地平線越淡，像蜃景從水氣裡浮出來 */
+.g-hai > span:first-child { display: inline-block; -webkit-mask-image: linear-gradient(#000 52%, rgba(0,0,0,.25) 92%, transparent); mask-image: linear-gradient(#000 52%, rgba(0,0,0,.25) 92%, transparent); }
+/* 線下一個倒過來、被壓扁的淡倒影 */
+.g-echo { left: max(var(--m), calc(50% - var(--glyph) * 1.25)); top: 50%; translate: 0 -100%; color: var(--pearl); opacity: .13; transform-origin: 50% 100%; filter: url(#heat) blur(1.5px); pointer-events: none;
+  -webkit-mask-image: linear-gradient(to top, #000, transparent 72%); mask-image: linear-gradient(to top, #000, transparent 72%); }
 .g-shi { right: max(var(--m), calc(50% - var(--glyph) * 1.25)); top: 50%; translate: 0 calc(var(--glyph) * .2); }
-.g-shi b { display: block; font-size: .78em; font-weight: 900; color: var(--red); background: var(--board); padding: .06em .12em .1em; outline: max(5px, .025em) solid var(--red); outline-offset: -.07em; }
+.g-shi b { position: relative; display: block; font-size: .78em; font-weight: 900; color: var(--red); background: var(--board) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .24 0 0 0 0 .08 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.38'/%3E%3C/svg%3E"); padding: .06em .12em .1em; outline: max(5px, .025em) solid var(--red); outline-offset: -.07em; }
+/* 招牌上緣那條被日光燈照亮的邊，和兩條吊線 */
+.g-shi b::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: .05em; background: rgba(255,250,220,.35); }
+.g-shi::before, .g-shi::after { content: ""; position: absolute; top: -.2em; width: 3px; height: .2em; background: linear-gradient(90deg, #8d938e, #e2e5df 50%, #8d938e); }
+.g-shi::before { left: 22%; } .g-shi::after { right: 22%; }
+/* 招牌後面的日光燈光暈，偶爾閃一下 */
+.g-shi .tube { position: absolute; left: -16%; right: -16%; top: -26%; height: 64%; z-index: -1; background: #eaf4ff; opacity: .34; filter: blur(40px); border-radius: 50%; animation: tube 9s steps(1, end) 2.4s infinite; }
+@keyframes tube { 0%, 61%, 63%, 64.5%, 100% { opacity: .34; } 62%, 64% { opacity: .06; } }
 .sub { font-size: 0; }
 
 /* 字旁邊的說明與動作 */
@@ -74,9 +88,15 @@ h1.g .sr { font-size: 1px; }
 .lab { pointer-events: none; }
 
 /* 紅繩上的紙條：直接到市場頁的某一段 */
-.rope { position: absolute; left: var(--m); right: calc(max(var(--m), calc(50% - var(--glyph) * 1.25)) + var(--glyph) * 1.08); justify-content: flex-end; z-index: 6; top: 50%; translate: 0 calc(var(--glyph) * .2 + 150px); display: flex; flex-wrap: wrap; gap: 14px; margin: 0; padding: 18px 0 0; list-style: none; will-change: transform; }
+.rope { position: absolute; left: var(--m); right: calc(max(var(--m), calc(50% - var(--glyph) * 1.25)) + var(--glyph) * 1.08); justify-content: flex-end; z-index: 6; top: 50%; translate: 0 calc(var(--glyph) * .2 + 120px); display: flex; flex-wrap: nowrap; gap: 12px; margin: 0; padding: 18px 0 0; list-style: none; will-change: transform; }
+.rope li { flex: none; }
+@media (hover: hover) {
+  .rope a { opacity: 0; translate: 0 -26px; transition: opacity .35s ease, translate .6s cubic-bezier(.3,1.4,.5,1), rotate .45s cubic-bezier(.3,1.5,.5,1); }
+  .gate.on-mkt .rope a, .rope:focus-within a { opacity: 1; translate: 0 0; }
+  .gate.on-mkt .rope li:nth-child(2) a { transition-delay: 60ms; } .gate.on-mkt .rope li:nth-child(3) a { transition-delay: 120ms; } .gate.on-mkt .rope li:nth-child(4) a { transition-delay: 180ms; } .gate.on-mkt .rope li:nth-child(5) a { transition-delay: 240ms; }
+}
 .rope::before { content: ""; position: absolute; left: calc(-1 * var(--m)); right: -24px; top: 4px; height: 2px; background: var(--red); }
-.rope a { display: block; position: relative; font-family: var(--f-hand); font-weight: 700; font-size: 17px; line-height: 1.3; color: var(--ink); padding: 9px 13px 8px; transform-origin: 50% -14px; rotate: var(--r, -1.6deg); transition: rotate .45s cubic-bezier(.3,1.5,.5,1), translate .45s cubic-bezier(.3,1.5,.5,1);
+.rope a { display: block; position: relative; white-space: nowrap; font-family: var(--f-hand); font-weight: 700; font-size: clamp(15px, 1.15vw, 17px); line-height: 1.3; color: var(--ink); padding: 9px 13px 8px; transform-origin: 50% -14px; rotate: var(--r, -1.6deg); transition: rotate .45s cubic-bezier(.3,1.5,.5,1), translate .45s cubic-bezier(.3,1.5,.5,1);
   background: var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .18 0 0 0 0 .12 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E"); }
 .rope li:nth-child(even) a { --r: 1.4deg; }
 .rope li { animation: sway 5.5s ease-in-out infinite alternate; animation-delay: calc(var(--i, 0) * -1.1s); transform-origin: 50% 0; }
@@ -89,19 +109,29 @@ h1.g .sr { font-size: 1px; }
 .quote { position: absolute; z-index: 6; left: var(--m); top: max(var(--m), env(safe-area-inset-top, 0px)); display: flex; gap: 14px; pointer-events: none; writing-mode: vertical-rl; }
 .quote span:first-child { font-size: 17px; letter-spacing: .5em; }
 .quote span:last-child { font-size: 14px; letter-spacing: .4em; opacity: .75; }
-.about { position: absolute; z-index: 6; right: var(--m); top: max(var(--m), env(safe-area-inset-top, 0px)); margin: 0; max-width: 21em; font-size: 17px; line-height: 1.75; color: var(--pearl-2); pointer-events: none; text-align: right; }
+.about { position: absolute; z-index: 6; right: var(--m); top: max(var(--m), env(safe-area-inset-top, 0px)); margin: 0; font-size: 15px; letter-spacing: .12em; color: var(--pearl-2); pointer-events: none; white-space: nowrap; }
 .credit { position: absolute; z-index: 6; right: var(--m); bottom: max(24px, env(safe-area-inset-bottom, 0px)); margin: 0; font-size: 14px; color: #c3cbc4; pointer-events: none; }
 
 /* 開場：地平線拉開，「海」從線上浮起、「市」掛上來 */
 .horizon { scale: 0 1; animation: line 1.2s cubic-bezier(.6,0,.2,1) .1s forwards; }
 @keyframes line { to { scale: 1 1; } }
-.g-hai { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; }
-@keyframes rise { from { opacity: .35; clip-path: inset(60% 0 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
-.g-shi { animation: hang 2s cubic-bezier(.3,.7,.3,1) .4s both; transform-origin: 50% 0; }
+.g-hai { animation: rise .9s cubic-bezier(.2,.7,.2,1) .15s both; }
+@keyframes rise { from { opacity: 0; translate: 0 -76%; } to { opacity: 1; translate: 0 -88%; } }
+.g-shi { animation: hang 1.6s cubic-bezier(.3,.7,.3,1) .3s both; transform-origin: 50% 0; }
 @keyframes hang { 0% { opacity: 0; rotate: 0deg; translate: 0 calc(var(--glyph) * .2 - 40px); } 25% { opacity: 1; rotate: 3deg; translate: 0 calc(var(--glyph) * .2); } 50% { rotate: -1.8deg; } 75% { rotate: .7deg; } 100% { rotate: 0deg; translate: 0 calc(var(--glyph) * .2); } }
-.lab, .rope, .about { animation: fade 1s ease 1.6s both; }
+.lab, .rope, .about, .g-echo { animation: fade .8s ease .9s both; }
 @keyframes fade { from { opacity: 0; } }
 
+/* 入場轉場：點「海」被夜霧吞沒；點「市」推進巷口、招牌的黃撐滿畫面 */
+.veil { position: absolute; inset: 0; z-index: 9; pointer-events: none; opacity: 0; transition: opacity .9s ease .15s; }
+.veil.sea { background: radial-gradient(ellipse at 50% 40%, #121b24, #05080c 70%); }
+.veil.mkt { background: #0d1110; transition-duration: .45s; transition-delay: .65s; }
+.gate.go-sea .veil.sea, .gate.go-mkt .veil.mkt { opacity: 1; }
+.gate.go-sea .g-hai > span:first-child { transition: filter 1s ease, opacity 1s ease; filter: blur(10px); opacity: 0; }
+.gate.go-mkt .market .photo { transform: scale(1.55); filter: brightness(.66) saturate(.95) blur(2.5px); }
+.gate.go-mkt .g-shi b { transition: transform 1s cubic-bezier(.5,0,.2,1), opacity .5s ease .4s; transform: scale(1.5) translateY(18%); opacity: 0; }
+.gate.go-mkt .g-shi .tube { animation: none; opacity: .6; transition: opacity .3s; }
+.gate.go-sea .lab, .gate.go-sea .rope, .gate.go-mkt .lab, .gate.go-mkt .rope, .gate.go-sea .about, .gate.go-mkt .about, .gate.go-sea .quote, .gate.go-mkt .quote, .gate.go-sea .credit, .gate.go-mkt .credit, .gate.go-sea .g-echo, .gate.go-mkt .g-echo { transition: opacity .3s; opacity: 0; }
 @media (max-width: 760px) {
   :root { --glyph: min(40vw, 30svh); }
   .g-hai { left: var(--m); }
@@ -114,16 +144,16 @@ h1.g .sr { font-size: 1px; }
   .lab span { font-size: 16px; }
   .lab br { display: none; }
   .lab-sea, .lab-mkt { max-width: 10.5em; }
-  .rope { translate: 0 calc(var(--glyph) * .2 + var(--glyph) * .9 + 22px); gap: 12px 10px; right: var(--m); justify-content: flex-start; }
+  .rope { top: auto; bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + 34px); translate: none !important; transform: none !important; gap: 22px 8px; right: var(--m); flex-wrap: wrap; justify-content: flex-start; }
   .rope a { font-size: 16px; padding: 8px 11px 7px; }
   .quote span:last-child { display: none; }
-  .about { left: calc(var(--m) + 48px); max-width: none; font-size: 16px; }
+  .about { font-size: 13px; }
   .credit { bottom: max(14px, env(safe-area-inset-bottom, 0px)); }
 }
 @media (max-height: 640px) { .about { display: none; } }
 @media (prefers-reduced-motion: reduce) {
-  .horizon, .g, .lab, .rope, .rope li, .about { animation: none !important; } .horizon { scale: 1 1; }
-  .g-hai { filter: none; } }
+  .horizon, .g, .lab, .rope, .rope li, .about, .g-echo, .g-shi .tube { animation: none !important; } .horizon { scale: 1 1; }
+  .g-hai, .g-echo { filter: none; } .rope a { opacity: 1 !important; translate: none !important; } }
 </style>
 </head>
 <body>
@@ -132,9 +162,14 @@ h1.g .sr { font-size: 1px; }
     <feTurbulence type="fractalNoise" baseFrequency="0.004 0.06" numOctaves="2" seed="3" result="n">
       <animate attributeName="baseFrequency" dur="7s" values="0.004 0.06;0.005 0.085;0.004 0.06" repeatCount="indefinite"/>
     </feTurbulence>
-    <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G">
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G" result="d">
       <animate attributeName="scale" id="heatScale" dur="5s" values="3;5.5;3" repeatCount="indefinite"/>
     </feDisplacementMap>
+    <!-- 邊緣一點色散：紅往左、藍往右，像光被水氣折彎 -->
+    <feColorMatrix in="d" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="cr"/><feOffset in="cr" dx="-.9" result="r"/>
+    <feColorMatrix in="d" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/>
+    <feColorMatrix in="d" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="cb"/><feOffset in="cb" dx=".9" result="b"/>
+    <feBlend in="r" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="b" mode="screen"/>
   </filter>
 </svg>
 <main class="gate" id="gate">
@@ -143,13 +178,14 @@ h1.g .sr { font-size: 1px; }
     <h1 class="g g-hai" id="gHai"><span aria-hidden="true">海</span><span class="sr">海市，龍口市場裡的一個攤位</span></h1>
   </a>
   <a class="market" id="mkt" href="market.html" aria-label="市：走進市場，一般網頁">
-    <img class="photo" src="images/longkou/1.jpg" width="1024" height="681" alt="" fetchpriority="high">
+    <img class="photo" id="photo" src="images/longkou/2.jpg" width="1024" height="681" alt="" fetchpriority="high"><span class="vig" aria-hidden="true"></span>
+    <span class="g g-echo" id="gEcho" aria-hidden="true">海</span>
     <div class="wet" id="wetL"><canvas id="counter" aria-hidden="true"></canvas></div>
   </a>
   <div class="horizon" id="hz" aria-hidden="true"></div>
-  <span class="g g-shi" id="gShi" aria-hidden="true"><b>市</b></span>
-  <div class="lab lab-sea" id="labSea" aria-hidden="true"><b>看見海市</b><span>3D 的海上，三座看得見、<br>到不了的樓臺</span></div>
-  <div class="lab lab-mkt" id="labMkt" aria-hidden="true"><b>走進市場</b><span>龍口市場裡的一個攤位，<br>四塊冰，用一個地方換一袋水</span></div>
+  <span class="g g-shi" id="gShi" aria-hidden="true"><span class="tube"></span><b>市</b></span>
+  <div class="lab lab-sea" id="labSea" aria-hidden="true"><b>看見海市</b><span>3D 的海上，三座樓臺</span></div>
+  <div class="lab lab-mkt" id="labMkt" aria-hidden="true"><b>走進市場</b><span>龍口市場裡的一個攤位</span></div>
   <ul class="rope" id="rope" aria-label="直接到市場裡的攤位">
     <li><a href="market.html#about">海市是什麼</a></li>
     <li><a href="market.html#sites">四個場域</a></li>
@@ -158,8 +194,9 @@ h1.g .sr { font-size: 1px; }
     <li><a href="market.html#ledger">帳簿</a></li>
   </ul>
   <div class="quote" aria-hidden="true"><span>海旁蜃氣象樓臺</span><span>史記天官書</span></div>
-  <p class="about">四塊冰在秤上慢慢化，各投著一個地方的照片。這攤不收錢，用你離開過的一個地方，換走一袋融水。12 月 5 日至 6 日，臺北龍口市場。</p>
+  <p class="about">12 月 5 日至 6 日　臺北龍口市場</p>
   <p class="credit">浪青計劃 2026，Koza</p>
+  <span class="veil sea" aria-hidden="true"></span><span class="veil mkt" aria-hidden="true"></span>
 </main>
 
 <script>
@@ -181,7 +218,7 @@ h1.g .sr { font-size: 1px; }
     t.lineJoin = 'round'; t.lineCap = 'round';
     let ox = 0;
     const X = v => ox + v * U, Y = v => G - v * U;
-    const lw = k => (t.lineWidth = Math.max(1, DPR * k));
+    const lw = k => (t.lineWidth = Math.max(1.4, DPR * k * 1.6));   // 線稿加粗一點，才看得出是三座樓臺的預告
     const path = (pts, close, fill) => { t.beginPath(); pts.forEach(([a, b], i) => i ? t.lineTo(X(a), Y(b)) : t.moveTo(X(a), Y(b))); if (close) t.closePath(); if (fill) { t.fillStyle = FILL; t.fill(); } t.stroke(); };
     const seg = (a, b, c2, d) => { t.beginPath(); t.moveTo(X(a), Y(b)); t.lineTo(X(c2), Y(d)); t.stroke(); };
     const bldg = (x0, y0, w, h, o = {}) => {
@@ -194,7 +231,7 @@ h1.g .sr { font-size: 1px; }
     };
 
     /* 航空城 */
-    ox = W * .15;
+    ox = W * .155;
     bldg(52, 0, 11, 132, { floor: 12, cols: 0 });
     t.strokeStyle = LINE; lw(.9); path([[46, 132], [69, 132], [74, 150], [41, 150]], true, true); path([[40, 150], [75, 150], [72, 156], [43, 156]], true, true); seg(57.5, 156, 57.5, 172);
     t.strokeStyle = SOFT; lw(.6); for (let k = 0; k < 4; k++) seg(46 + k * 8, 134, 44 + k * 9.5, 148);
@@ -213,7 +250,7 @@ h1.g .sr { font-size: 1px; }
     path([[-36, 125], [-22, 112], [-17, 112], [-26, 126]]); path([[-36, 127], [-28, 137], [-24, 137], [-28, 127]]);
 
     /* 雙溪 */
-    ox = W * .37;
+    ox = W * .55;
     t.strokeStyle = SOFT; lw(.7);
     t.beginPath(); t.moveTo(X(-125), Y(0)); [[-100, 38], [-74, 62], [-44, 96], [-18, 82], [8, 104], [40, 128], [72, 96], [104, 66], [128, 20]].forEach(([a, b]) => t.lineTo(X(a), Y(b))); t.stroke();
     t.beginPath(); t.moveTo(X(-112), Y(14)); [[-80, 40], [-50, 56], [-20, 48], [16, 70], [52, 62], [92, 40], [118, 12]].forEach(([a, b]) => t.lineTo(X(a), Y(b))); t.stroke();
@@ -225,7 +262,7 @@ h1.g .sr { font-size: 1px; }
     t.strokeStyle = SOFT; lw(.6); for (let k = 0; k < 3; k++) { t.beginPath(); for (let xx = -100; xx <= 10; xx += 4) { const yy = 4 + k * 3 + Math.sin(xx * .3 + k) * .8; xx === -100 ? t.moveTo(X(xx), Y(yy)) : t.lineTo(X(xx), Y(yy)); } t.stroke(); }
 
     /* 龍口：一層樓高的鐵皮屋頂連成一片，巷口掛著黃色的招牌，旁邊一棟紅磚老樓，後面是兩三層的老房子和水塔 */
-    ox = W * .6;
+    ox = W * .73;
     bldg(-128, 0, 24, 30, { floor: 10, cols: 1 }); bldg(-104, 0, 20, 22, { floor: 11, cols: 0 }); bldg(92, 0, 26, 30, { floor: 10, cols: 1 }); bldg(118, 0, 22, 20, { floor: 10, cols: 0 });
     bldg(-60, 14, 18, 18, { floor: 9, cols: 0 }); bldg(64, 14, 16, 14, { floor: 7, cols: 0 });
     t.strokeStyle = LINE; lw(.8); for (const [tx, ty] of [[-114, 30], [-51, 32], [105, 30], [72, 28]]) { path([[tx - 4, ty], [tx - 4, ty + 6], [tx + 4, ty + 6], [tx + 4, ty]]); t.beginPath(); t.ellipse(X(tx), Y(ty + 6), 4 * U, 1.4 * U, 0, 0, 7); t.stroke(); }
@@ -241,7 +278,7 @@ h1.g .sr { font-size: 1px; }
     t.strokeStyle = LINE; lw(.8); path([[37, 22], [40, 22], [40, 40], [37, 40]]);
 
     /* 社子島 */
-    ox = W * .85;
+    ox = W * .91;
     for (let k = 0; k < 9; k++) { const x0 = -120 + k * 21, h = 18 + (k * 7) % 11; bldg(x0, 14, 19, h, { floor: 30, cols: 0 }); t.strokeStyle = LINE; lw(.8); path([[x0 - 1, 14 + h], [x0 + 9.5, 14 + h + 7], [x0 + 20, 14 + h]]); }
     t.strokeStyle = LINE; lw(1.1); path([[-132, 0], [-124, 16], [128, 16], [136, 0]], false, true);
     t.strokeStyle = SOFT; lw(.6); seg(-126, 11, 130, 11);
@@ -275,15 +312,30 @@ h1.g .sr { font-size: 1px; }
   /* 地平線：游標在海上就往下退（海市變大），在市場就往上收（看見巷口） */
   let hz = .5, hzT = .5, pin = 0;
   const sea = $('sea'), mkt = $('mkt');
-  const toSea = () => { hzT = .6; pin = 1; }, toMkt = () => { hzT = .4; pin = -1; }, rest = () => { hzT = .5; pin = 0; };
+  let leaving = null;
+  const toSea = () => { if (!leaving) { hzT = .6; pin = 1; } }, toMkt = () => { if (!leaving) { hzT = .4; pin = -1; } }, rest = () => { if (!leaving) { hzT = .5; pin = 0; } };
   if (!touch) {
     addEventListener('pointermove', e => { const k = e.clientY / innerHeight; if (k < hz - .02) toSea(); else if (k > hz + .02) toMkt(); });
     document.documentElement.addEventListener('pointerleave', rest);
   }
   sea.addEventListener('focus', toSea); mkt.addEventListener('focus', toMkt);
   sea.addEventListener('blur', rest); mkt.addEventListener('blur', rest);
+  /* 入場轉場：先播一秒的動畫再換頁；開新分頁（Cmd／Ctrl／Shift、中鍵）照常，減少動態時直接換頁 */
+  function leave(e, kind, href) {
+    if (reduce || e.defaultPrevented || e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || leaving) return;
+    e.preventDefault(); leaving = kind;
+    hzT = kind === 'sea' ? 1.08 : -.08; pin = kind === 'sea' ? 1 : -1;
+    gate.classList.add(kind === 'sea' ? 'go-sea' : 'go-mkt');
+    setTimeout(() => { location.href = href; }, kind === 'sea' ? 1050 : 1100);
+  }
+  sea.addEventListener('click', e => leave(e, 'sea', sea.getAttribute('href')));
+  mkt.addEventListener('click', e => leave(e, 'mkt', mkt.getAttribute('href')));
+  $('rope').addEventListener('click', e => { const a = e.target.closest('a'); if (a) leave(e, 'mkt', a.getAttribute('href')); });
+  // 從下一頁按「上一頁」回來時（瀏覽器的頁面快取），把轉場的狀態還原
+  addEventListener('pageshow', e => { if (!e.persisted) return; leaving = null; gate.classList.remove('go-sea', 'go-mkt'); hzT = .5; pin = 0; });
   // 地平線以下的地方都屬於市場：點在線下（包括「市」和它的說明）就走進市場
-  const els = { sky: $('skyL'), wet: $('wetL'), hz: $('hz'), hai: $('gHai'), shi: $('gShi'), ls: $('labSea'), lm: $('labMkt'), rope: $('rope') };
+  const els = { sky: $('skyL'), wet: $('wetL'), hz: $('hz'), hai: $('gHai'), shi: $('gShi'), ls: $('labSea'), lm: $('labMkt'), rope: $('rope'), echo: $('gEcho') };
+  const gate = $('gate');
   const heat = document.getElementById('heatScale');
 
   function layout(t) {
@@ -295,7 +347,9 @@ h1.g .sr { font-size: 1px; }
     els.hai.style.transform = `${tr} scale(${(1 + Math.max(0, k) * .12).toFixed(3)})`;
     els.hai.style.transformOrigin = '50% 100%';
     els.shi.style.transform = `${tr} scale(${(1 + Math.max(0, -k) * .06).toFixed(3)})`;
-    els.ls.style.transform = tr; els.lm.style.transform = tr; els.rope.style.transform = tr;
+    els.ls.style.transform = tr; els.lm.style.transform = tr; if (!touch) els.rope.style.transform = tr;
+    els.echo.style.transform = `${tr} translateY(2px) scale(${(1 + Math.max(0, k) * .12).toFixed(3)}, ${(-.42 - Math.max(0, k) * .08).toFixed(3)})`;
+    gate.classList.toggle('on-mkt', pin < 0);
     mkt.style.clipPath = `inset(${(hz * 100).toFixed(2)}% 0 0 0)`;
     if (heat && !reduce) heat.setAttribute('values', `${(2.5 + k).toFixed(1)};${(4.5 + k * 2).toFixed(1)};${(2.5 + k).toFixed(1)}`);
   }
@@ -303,10 +357,10 @@ h1.g .sr { font-size: 1px; }
   function draw(t) {
     if (!art || !art.width || !art.height) { if (size() === false) { requestAnimationFrame(draw); return; } }
     if (t0 === null) t0 = t;
-    const rise = reduce ? 1 : ease((t - t0 - 500) / 2400);
+    const rise = reduce ? 1 : ease((t - t0 - 200) / 1500);
     // 地平線慢慢跟上游標；沒有游標時（手機）自己輕輕呼吸
     const idle = touch && !reduce && !pin ? Math.sin(t * .00035) * .025 : 0;
-    hz += (hzT + idle - hz) * (reduce ? 1 : .06);
+    hz += (hzT + idle - hz) * (reduce ? 1 : leaving ? .045 : .06);
     hot += ((pin > 0 ? 1 : 0) - hot) * .05;
     layout(t);
 
