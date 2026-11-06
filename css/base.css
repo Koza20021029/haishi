@@ -27,6 +27,15 @@ a { color: inherit; }
 .tag-red { font-family: var(--f-hand); background: var(--red); color: #fff; padding: 2px 10px; border-radius: 2px; display: inline-block; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
+/* ===== 聲音開關（js/sound.js）：三條小聲波，開著會跳，關著是平的 ===== */
+.eq { display: inline-flex; align-items: flex-end; gap: 3px; height: 11px; }
+.eq b { width: 2px; height: 30%; background: currentColor; transition: height .3s; }
+[aria-pressed="true"] .eq b { animation: eq 1.05s ease-in-out infinite alternate; }
+[aria-pressed="true"] .eq b:nth-child(2) { animation-delay: -.45s; animation-duration: .8s; }
+[aria-pressed="true"] .eq b:nth-child(3) { animation-delay: -.2s; animation-duration: 1.25s; }
+@keyframes eq { from { height: 25%; } to { height: 100%; } }
+@media (prefers-reduced-motion: reduce) { [aria-pressed="true"] .eq b { height: 70%; } }
+
 /* ===== 換頁（js/passage.js）=====
    body::before 是離開時蓋上來的那一層，body::after 是到達時掀開的那一層。
    鐵捲門：深藍灰的門板一條一條，下緣一根底樑，門上漆著「海市」。 */

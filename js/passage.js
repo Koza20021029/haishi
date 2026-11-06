@@ -35,6 +35,7 @@
   function go(href, kind) {
     if (leaving) return; leaving = true;
     try { sessionStorage.setItem(KEY, kind); } catch (e) {}
+    if (window.HaishiSound) window.HaishiSound.leave(kind);   // 拉門的聲音／起霧的風聲，然後整體淡出
     if (reduce) { location.href = href; return; }
     html.setAttribute('data-leave', kind);
     setTimeout(() => { location.href = href; }, LEAVE_MS[kind] || 700);

@@ -9,6 +9,9 @@
   const T = window.THREE;
   T.ColorManagement.legacyMode = false;               // 顏色用 sRGB 輸入，內部線性計算
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // 聲音（js/sound.js）：沒載入或關著時什麼都不做
+  const snd = (n, o) => { if (window.HaishiSound) window.HaishiSound.fx(n, o); };
+  const mixSnd = o => { if (window.HaishiSound) window.HaishiSound.mix(o); };
   const S = id => D.sites.find(s => s.id === id);
   const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1863,11 +1866,29 @@
     ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
     const tm = towers.flatMap(g => g.children.filter(c => c.isMesh));
     const hits = ray.intersectObjects([...ices.map(i => i.shell), ...tm, ...islands.map(i => i.hit)], false);
-    if (!hits.length) return;
+    if (!hits.length) { seaRipple(cx, cy); return; }
     const o = hits[0].object;
     if (o.userData.tower) { const en = o.userData.tower.userData.entry; toast(`<b>${esc(en.place)}</b>${esc(en.words)}`); return; }
     if (o.userData.stall) { trade.last = null; chooseIce(o.userData.site); return; }
     if (o.userData.site) goSite(o.userData.site);
+  }
+
+  /* 點海面：從點下去的地方起兩圈漣漪，聲音的高低跟著點的左右 */
+  const seaPlane = new T.Plane(new T.Vector3(0, 1, 0), 0), _hit = new T.Vector3(), ripples = [];
+  const rippleGeo = new T.RingGeometry(.9, 1, 96); rippleGeo.rotateX(-Math.PI / 2);
+  for (let k = 0; k < 8; k++) { const m = new T.Mesh(rippleGeo, new T.MeshBasicMaterial({ color: lin(1.3, 1.35, 1.6), transparent: true, opacity: 0, depthWrite: false, blending: T.AdditiveBlending, toneMapped: false }));
+    m.visible = false; m.renderOrder = 2; scene.add(m); ripples.push({ m, t: -1, size: 1 }); }
+  let rippleI = 0;
+  function seaRipple(cx, cy) {
+    if (!ray.ray.intersectPlane(seaPlane, _hit)) return;
+    const dist = camera.position.distanceTo(_hit); if (dist > 1600) return;
+    [0, .28].forEach((delay, j) => { const rp = ripples[rippleI++ % ripples.length]; rp.m.position.set(_hit.x, .35, _hit.z); rp.t = -delay; rp.size = Math.max(1.5, dist * .05) * (j ? .7 : 1); rp.m.visible = true; });
+    snd('ripple', { pitch: cx / innerWidth });
+  }
+  function stepRipples(dt) {
+    ripples.forEach(rp => { if (rp.t > 2.6 || !rp.m.visible) return; rp.t += dt; if (rp.t < 0) { rp.m.material.opacity = 0; return; }
+      const k = rp.t / 2.6, e = 1 - Math.pow(1 - k, 3); rp.m.scale.setScalar(rp.size * (.3 + e * 4)); rp.m.material.opacity = Math.pow(1 - k, 2) * .75;
+      if (rp.t > 2.6) rp.m.visible = false; });
   }
 
   el.addEventListener('pointermove', e => {
@@ -1911,13 +1932,18 @@
     if (i === 3) { Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1 });
       flyTo(islandView('shezi', 110), 4.5, () => setTimeout(() => { if (chapter === 3 && !userMoved) flyTo(islandView('shezi', 16), 9); }, 2600)); }
     if (i === 4) { Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1 }); flyTo(VIEWS.stall, 5, () => { if (chapter === 4) openPanel('longkou'); }); }
+    // 聲音跟著章節：序是海和風；龍口是巷子裡的人聲和日光燈；樓臺是浮起來的和弦；靠近是潮水；交換回到攤上
+    mixSnd([{ sea: .75, wind: .45, market: 0, hum: 0, rain: 0, music: .7 }, { sea: .18, wind: .06, market: .65, hum: .45, rain: 0, music: .45 },
+      { sea: .6, wind: .3, market: .04, hum: 0, rain: 0, music: 1 }, { sea: .9, wind: .3, market: 0, hum: 0, rain: .15, music: .65 },
+      { sea: .35, wind: .1, market: .5, hum: .2, rain: 0, music: .6 }][i]);
+    if (i > 0) snd('whoosh');
   }
   function next() { if (!started) return go(0); if (chapter < CH.length - 1) go(chapter + 1); else setFree(true); }
   function prev() { if (chapter > 0) go(chapter - 1); }
   function setFree(on) {
     free = on; document.body.classList.toggle('free', on);
     $('tourBtn').setAttribute('aria-pressed', String(!on)); $('freeBtn').setAttribute('aria-pressed', String(on));
-    if (on) { $('caption').classList.remove('on'); closePanel(); Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1, expo: .92 }); flyTo(VIEWS.overview, 4); toast('拖曳轉動視角，滾輪或雙指縮放。<br>點海上的樓臺或攤上的冰。'); }
+    if (on) { $('caption').classList.remove('on'); closePanel(); Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1, expo: .92 }); flyTo(VIEWS.overview, 4); toast('拖曳轉動視角，滾輪或雙指縮放。<br>點海上的樓臺、攤上的冰，或點一下海面。'); }
   }
   $('next').addEventListener('click', next); $('prev').addEventListener('click', prev);
   $('tourBtn').addEventListener('click', () => { setFree(false); go(0); });
@@ -1930,6 +1956,7 @@
   ['longkou', 'shuangxi', 'hangkong', 'shezi'].forEach(id => { const b = document.createElement('button'); b.type = 'button'; b.textContent = S(id).name; b.dataset.site = id; if (id === 'longkou') b.classList.add('main'); b.addEventListener('click', () => goSite(id)); nav.append(b); });
   function goSite(id) {
     if (!free) setFree(true);
+    snd('whoosh');
     if (id === 'longkou') flyTo(VIEWS.stall, 3.5); else flyTo(islandView(id, 95), 3.5);
     openPanel(id);
   }
@@ -2009,7 +2036,7 @@
     trade.site = id; trade.step = 2;
     if (!$('panel').classList.contains('open') || !$('tstage')) openPanel('longkou'); else stageWeigh();
     highlight(id);
-    const s = S(id); speak(s.call); vendorLine = `「${s.call}」`; vendorUntil = clock.elapsedTime + 6;
+    const s = S(id); vendorLine = `「${s.call}」`; vendorUntil = clock.elapsedTime + 6; snd('drip');
     if (fly) { const ic = stallIce(id), p = new T.Vector3(); ic.g.getWorldPosition(p); flyTo(V(p.x, p.y + ic.h * .5, p.z, 0, 1.5, 5.6 + ic.h * .35), 2.4); }   // 靠到冰前面，照片佔半個畫面以上
   }
   function stageWeigh() {
@@ -2033,7 +2060,9 @@
       const line = !place ? '「拿一個你離開過的地方來換。」' : !words ? '「這是什麼地方？說說看。」' : w < BAG ? '「還輕了一點，再多說一點這個地方。」' : '「剛剛好，成交。」';
       $('vline').textContent = line; vendorLine = line; vendorUntil = clock.elapsedTime + 8;
       $('deal').disabled = !ok; document.querySelector('.scale').classList.toggle('ok', !!ok);
+      if (ok && !wasOk) snd('scale'); wasOk = !!ok;
     };
+    let wasOk = false;
     $('place').addEventListener('input', upd); $('words').addEventListener('input', upd);
     $('trade').addEventListener('submit', e => {
       e.preventDefault();
@@ -2043,7 +2072,7 @@
       const entry = window.HaishiLedger.add(place, words, trade.site);
       trade.swap = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
       trade.last = entry; trade.tower = null;
-      speak('成交，多謝喔'); vendorLine = '「成交，多謝喔。」'; vendorUntil = clock.elapsedTime + 6;
+      vendorLine = '「成交，多謝喔。」'; vendorUntil = clock.elapsedTime + 6; snd('clip'); setTimeout(() => snd('deal'), 180);
       stageDone();
       // 樓臺、紙條、掛起來的水袋分開做，不要一次卡住畫面
       setTimeout(() => { towerKeys.add(entry.cid); trade.tower = addTower(entry, towers.length, true); }, 60);
@@ -2071,7 +2100,7 @@
     a.src = full.toDataURL('image/png'); b.src = plain.toDataURL('image/png');
     requestAnimationFrame(() => requestAnimationFrame(() => b.classList.add('on')));
     $('save').href = a.src;
-    $('seeTower').addEventListener('click', () => { const g = trade.tower; if (!g) return; g.userData.born = clock.elapsedTime + (reduce ? 0 : 3.1);   // 飛過去的路上先沉在水裡，鏡頭到了才浮起來 if (innerWidth < 760) closePanel();
+    $('seeTower').addEventListener('click', () => { const g = trade.tower; if (!g) return; setTimeout(() => snd('chime', { i: 5, gain: .08 }), reduce ? 0 : 3100); g.userData.born = clock.elapsedTime + (reduce ? 0 : 3.1);   // 飛過去的路上先沉在水裡，鏡頭到了才浮起來 if (innerWidth < 760) closePanel();
       flyTo(V(g.position.x, 8, g.position.z, Math.atan2(-g.position.x, -g.position.z), 1.32, 42), 3.5); });
     $('again').addEventListener('click', () => { trade.last = null; stagePick(); flyTo(VIEWS.stall, 2); });
     toast(`<b>${esc(e.place)}</b>秤起來 ${e.w.toFixed(1)} 斤，換走一袋${s.name}的融水。`, 5000);
@@ -2114,20 +2143,14 @@
   function highlight(id) { ices.forEach(i => { if (i.stall) i.want = id && i.site.id === id ? 1 : 0; }); }
 
   // 叫賣：攤子上方的對話框，可以打開聲音
-  let voiceOn = false, vendorLine = '', vendorUntil = 0, callIdx = 0, callNext = 0;
+  let vendorLine = '', vendorUntil = 0, callIdx = 0, callNext = 0;   // 攤主的話只用文字的對話框，不再用語音念出來
   const CALLS = ['來喔來喔，冰上的地方，看看喔', ...ORDER.map(id => S(id).call), '這攤不收錢，拿一個地方來換'];
-  function speak(t) {
-    if (!voiceOn || !window.speechSynthesis) return;
-    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t.replace(/[「」。，]/g, ' ')); u.lang = 'zh-TW';
-      const vs = speechSynthesis.getVoices(), v = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)); if (v) u.voice = v; u.rate = .95; u.pitch = 1.1; speechSynthesis.speak(u); } catch (e) {}
-  }
-  $('voiceBtn').addEventListener('click', () => { voiceOn = !voiceOn; $('voiceBtn').setAttribute('aria-pressed', String(voiceOn)); if (voiceOn) speak(CALLS[callIdx]); else if (window.speechSynthesis) speechSynthesis.cancel(); });
   const callout = $('callout'), stallWorld = new T.Vector3();
   function updateCallout(t) {
     KZ.localToWorld(stallWorld.set(0, 9.4, 0));
     const d = camera.position.distanceTo(stallWorld), show = started && (free || chapter === 4) && d < 90;
     if (show) {
-      if (t > callNext && t > vendorUntil) { callIdx = (callIdx + 1) % CALLS.length; callNext = t + 6; vendorLine = `「${CALLS[callIdx]}」`; if (d < 40) speak(CALLS[callIdx]); }
+      if (t > callNext && t > vendorUntil) { callIdx = (callIdx + 1) % CALLS.length; callNext = t + 6; vendorLine = `「${CALLS[callIdx]}」`; }
       if (callout.textContent !== vendorLine) callout.textContent = vendorLine;
       const p = stallWorld.clone().project(camera);
       if (p.z < 1) {
@@ -2171,7 +2194,7 @@
     if (D.sites.some(s => s.id === h)) { go(2); setFree(true); setTimeout(() => goSite(h), 300); }
   });
 
-  let lastNear = '', weightTick = 0, viewShift = 0;
+  let lastNear = '', weightTick = 0, viewShift = 0, sndT = 0;
   let camPanT = null;
   function loop() {
     const raw = clock.getDelta(), dt = Math.min(.05, raw), t = clock.elapsedTime;
@@ -2181,7 +2204,7 @@
     skyMat.uniforms.uClear.value = state.clear; compMat.uniforms.uExpo.value = state.expo;
     // 直式螢幕放不下三座樓臺：到了「二 樓臺」就慢慢左右掃過去，一座一座看
     if (chapter === 2 && !free && !fly && !userMoved && innerWidth < innerHeight && !reduce) cam.target.x = Math.sin((t - (camPanT ??= t)) * .16) * 430; else camPanT = null;
-    stepFly(Math.min(.25, raw)); applyCam(dt);
+    stepFly(Math.min(.25, raw)); applyCam(dt); stepRipples(dt);
 
     // 巷子盡頭的光，像呼吸一樣一明一暗
     const br = Math.sin(t * .6) * .5 + .5;
@@ -2209,6 +2232,7 @@
           is.recs.forEach(pr => { pr.at.getWorldPosition(_pv).project(camera); if (_pv.z > 1) return;
             const sx = (_pv.x * .5 + .5) * innerWidth - pointer.x, sy = (-_pv.y * .5 + .5) * innerHeight - pointer.y, dd = sx * sx + sy * sy; if (dd < bd) { bd = dd; best = pr; } }); }
         const all = panelSite === is.site.id && hoverSite !== is.site.id ? (innerWidth > 760 ? .5 : .72) : 0;   // 桌機上側欄已經在說這座島，牌子退後一點
+        if (best && best !== is.lastBest && dA > .3) snd('tick'); is.lastBest = best;
         is.recs.forEach(pr => { pr.k += ((pr === best ? 1 : all) - pr.k) * ease; setOp(pr.mats, dA * is.pinK * pr.k); }); }
       { const flick = reduce ? .6 : smooth(.15, .85, (Math.sin(t * .19 + i * 2.1) * .5 + .5) * (Math.sin(t * .47 + i * 1.3) * .35 + .65));
         const sq = reduce ? .7 : .55 + Math.sin(t * .31 + i) * .2 + Math.sin(t * .83 + i * 3) * .05, top = is.ghostTop;
@@ -2223,7 +2247,11 @@
       if (is.Dl.g.userData.anim && is.Dl.g.visible) is.Dl.g.userData.anim(t, dt);
       if (d < 40 && started) nearName = is.site.name;
     });
-    if (free && nearName && nearName !== lastNear) toast(`${nearName}散了。<br>一靠近，海市就到不了。`, 3800);
+    if (free && nearName && nearName !== lastNear) { toast(`${nearName}散了。<br>一靠近，海市就到不了。`, 3800); snd('scatter'); }
+    // 自己逛的時候，聲音跟著你靠近哪裡：雙溪下雨、航空城起風、社子島漲潮、攤前是市場
+    if (free && (sndT -= dt) < 0) { sndT = .35;
+      const dLK = camera.position.distanceTo(LK.position), mk = 1 - smooth(30, 140, dLK), nr = id => { const is = islands.find(x => x.site.id === id); return is ? 1 - smooth(70, 230, camera.position.distanceTo(is.root.position) / ISC) : 0; };
+      mixSnd({ market: mk * .65, hum: (1 - smooth(18, 60, dLK)) * .35, rain: nr('shuangxi') * .85, wind: .22 + nr('hangkong') * .45, sea: .5 + nr('shezi') * .45 - mk * .3, music: .9 - mk * .4 }); }
     lastNear = nearName;
 
     towers.forEach((g, i) => {

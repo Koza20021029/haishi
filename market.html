@@ -84,6 +84,8 @@ p { margin: 0; }
 .beam .to3d { font-family: var(--f-hand); font-weight: 700; font-size: var(--t-body); text-decoration: none; background: var(--board); color: var(--red-2); padding: 6px 16px 5px; white-space: nowrap; transition: transform .25s var(--ease), background .25s; }
 .beam .to3d:hover { transform: translateY(-2px); background: #f6df6a; }
 .beam .to3d:active { transform: translateY(1px); }
+.beam .snd { font: inherit; font-size: var(--t-small); color: var(--on-dark-2); background: none; border: 0; padding: 6px 2px; display: inline-flex; align-items: center; gap: 9px; cursor: pointer; transition: color .25s; }
+.beam .snd:hover, .beam .snd[aria-pressed="true"] { color: var(--on-dark); }
 .beam .menu { display: none; font: inherit; font-size: var(--t-body); color: var(--on-dark); background: none; border: 0; padding: 8px 0 8px 12px; cursor: pointer; }
 /* 游標（只給滑鼠）：反白的小點＋手寫的小價牌。輸入框裡照常是文字游標 */
 .has-cur, .has-cur * { cursor: none !important; }
@@ -354,6 +356,8 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
   .beam .in { gap: 14px; } .beam .logo { flex: 1; }
   .beam .menu { display: block; }
   .beam .to3d { font-size: var(--t-small); padding: 5px 12px 4px; }
+  .beam .snd span { display: none; }   /* 手機上只留三條聲波，字由 aria-label 說 */
+  .beam .snd { padding: 10px 6px; }
   .hero { background-image: var(--enamel); --by: 30svh; --sq: 46vw; --t-mono: 34vw; min-height: 620px; }
   .hero .copy { top: calc(var(--by) + var(--sq) / 2 + 40px); }
   .hero .copy p:first-child { font-size: var(--t-lead); }
@@ -416,6 +420,7 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
     <nav aria-label="頁內" id="nav">
       <a href="#about">海市是什麼</a><a href="#sites">四個場域</a><a href="#walked">走讀撿到的</a><a href="#stall">龍口的攤位</a><a href="#ledger">帳簿</a>
     </nav>
+    <button type="button" class="snd" data-sound aria-pressed="true"><i class="eq" aria-hidden="true"><b></b><b></b><b></b></i><span>聲音</span></button>
     <a class="to3d" href="world.html">看見海市</a>
   </div>
   <span class="prog" id="prog" aria-hidden="true"></span>
@@ -560,9 +565,12 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
 <script>document.documentElement.classList.add('js');</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="js/data.js"></script>
+<script src="js/sound.js"></script>
 <script>
 (() => {
   const D = window.HAISHI, $ = id => document.getElementById(id);
+  const snd = (n, o) => { if (window.HaishiSound) window.HaishiSound.fx(n, o); };
+  const mixSnd = o => { if (window.HaishiSound) window.HaishiSound.mix(o); };
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const info = p => (D.photoInfo || {})[p] || {};
@@ -724,13 +732,13 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
     rest.forEach(i => box.append(figure(s, i, 400, 500)));
     if (animate) swing($('panel')); else $('panel').querySelectorAll('.needle').forEach(n => n.style.transform = `rotate(${n.dataset.a}deg)`);
   }
-  $('doors').addEventListener('click', e => { const b = e.target.closest('.door'); if (!b || b.getAttribute('aria-selected') === 'true') return; show(b.dataset.id, !reduce);
+  $('doors').addEventListener('click', e => { const b = e.target.closest('.door'); if (!b || b.getAttribute('aria-selected') === 'true') return; show(b.dataset.id, !reduce); snd('shutter');
     // 手機上門和說明不在同一屏，選了以後把說明捲進來
     if (innerWidth <= 760) $('panel').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); });
   $('doors').addEventListener('keydown', e => {
     const bs = [...document.querySelectorAll('.door')], i = bs.indexOf(document.activeElement); if (i < 0) return;
     const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0; if (!d) return;
-    e.preventDefault(); const nx = bs[(i + d + bs.length) % bs.length]; nx.focus(); show(nx.dataset.id, !reduce);
+    e.preventDefault(); const nx = bs[(i + d + bs.length) % bs.length]; nx.focus(); show(nx.dataset.id, !reduce); snd('shutter');
   });
   show('longkou', false);
   if (!reduce && 'IntersectionObserver' in window) {   // 第一次捲到這裡，秤一次
@@ -767,7 +775,7 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
     });
     // 打開那一格就播，捲出畫面就停（省電，也不會在看不到的地方一直轉）
     let stepsSeen = false;
-    $('steps').addEventListener('click', () => setTimeout(() => stepsSeen && play(), 0));
+    $('steps').addEventListener('click', e => { if (e.target.closest('.step:not(.open) > button')) snd('paper'); setTimeout(() => stepsSeen && play(), 0); });
     if ('IntersectionObserver' in window) new IntersectionObserver(es => { stepsSeen = es[0].isIntersecting; stepsSeen ? play() : document.querySelectorAll('.step video').forEach(v => v.pause()); }, { threshold: .25 }).observe($('steps'));
     else stepsSeen = true;
     $('steps').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const st = b.parentElement;
@@ -790,7 +798,7 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
     const sb = $('sendBtn'), short = Math.max(0, BAG - kg);
     sb.classList.toggle('light', !enough);
     sb.textContent = enough ? '夾上繩子' : kg ? `還差 ${short.toFixed(1)} 斤` : '先寫一個地方';
-    if (enough && !sc.dataset.was) { sc.dataset.was = '1'; if (!reduce) { sb.classList.remove('ready'); void sb.offsetWidth; sb.classList.add('ready'); } }
+    if (enough && !sc.dataset.was) { sc.dataset.was = '1'; snd('scale'); if (!reduce) { sb.classList.remove('ready'); void sb.offsetWidth; sb.classList.add('ready'); } }
     if (!enough) delete sc.dataset.was;
   };
   ['input', 'change'].forEach(ev => { $('place').addEventListener(ev, weighNow); $('words').addEventListener(ev, weighNow); });
@@ -805,17 +813,17 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
       `<li class="blank"><button type="button" id="nextSlip"><span class="pl">下一張，</span><span class="wd">夾你的地方</span></button></li>`;
   }
   rope(false);
-  $('rope').addEventListener('click', e => { if (!e.target.closest('#nextSlip')) return; $('trade').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); setTimeout(() => $('place').focus({ preventScroll: true }), reduce ? 0 : 500); });
+  $('rope').addEventListener('click', e => { if (!e.target.closest('#nextSlip')) return; snd('tick'); $('trade').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); setTimeout(() => $('place').focus({ preventScroll: true }), reduce ? 0 : 500); });
   // 共看：別人（線上或攤位前）夾上的紙條，會即時掉到這條繩上
   const count = () => { const n = window.HaishiLedger.all().filter(e => !e.sample).length; $('count').textContent = n ? `，共 ${n} 個地方` : ''; };
   count();
-  addEventListener('haishi-ledger', ({ detail: { type } }) => { if (type === 'mine') return; rope(type === 'add' && !reduce); count(); });
+  addEventListener('haishi-ledger', ({ detail: { type } }) => { if (type === 'mine') return; rope(type === 'add' && !reduce); count(); if (type === 'add') snd('paper'); });
   $('trade').addEventListener('submit', e => {
     e.preventDefault();
     const p = $('place').value.trim(), w = $('words').value.trim(); if (!p || !w) return;
     const kg = window.HaishiLedger.weigh(p, w);
     if (kg < BAG) { $('done').textContent = `「${p}」現在 ${kg.toFixed(1)} 斤，還輕了一點，再多說一點這個地方。`; $('words').focus(); return; }
-    const en = window.HaishiLedger.add(p, w); e.target.reset(); weighNow(); rope(!reduce);
+    const en = window.HaishiLedger.add(p, w); e.target.reset(); weighNow(); rope(!reduce); snd('clip'); setTimeout(() => snd('deal'), 160);
     $('done').textContent = `「${p}」秤起來 ${en.w.toFixed(1)} 斤，夾上繩子了。所有人都看得到。`; count();
   });
 
@@ -873,6 +881,17 @@ footer .name { margin-top: 40px; font-size: min(46vw, 760px); line-height: .78; 
     // 按下去以後門已經拉起、那件事已經打開：價牌跟著換掉
     addEventListener('click', e => requestAnimationFrame(() => { const t = e.target instanceof Element ? e.target : document.body, s = say(t); if (s) tag.textContent = s; tag.classList.toggle('on', !!s); }));
     document.documentElement.addEventListener('pointerleave', () => { dot.classList.remove('on'); tag.classList.remove('on'); });
+  }
+
+  /* ---- 聲音跟著段落：招牌前是市場的人聲，巷子裡有日光燈的嗡嗡聲，價牌和帳簿那裡安靜一點、只留音樂 ---- */
+  if ('IntersectionObserver' in window) {
+    const MIX = { hero: { market: .5, hum: 0, sea: .08, wind: .05, rain: 0, music: .65 }, walk: { market: .3, hum: .45, sea: .05, wind: .05, music: .5 },
+      about: { market: .12, hum: 0, sea: .2, wind: .1, music: .85 }, sites: { market: .08, hum: 0, sea: .25, wind: .3, music: .85 },
+      walked: { market: .06, hum: 0, sea: .1, wind: .12, music: .8 }, stall: { market: .5, hum: .18, sea: .08, wind: .05, music: .6 },
+      ledger: { market: .1, hum: 0, sea: .15, wind: .08, music: .9 }, foot: { market: .45, hum: 0, sea: .06, wind: .05, music: .6 } };
+    const io3 = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) mixSnd(MIX[en.target.dataset.mix]); }), { rootMargin: '-45% 0px -50% 0px' });
+    [['.hero', 'hero'], ['#walk', 'walk'], ['#about', 'about'], ['#sites', 'sites'], ['#walked', 'walked'], ['#stall', 'stall'], ['#ledger', 'ledger'], ['footer', 'foot']]
+      .forEach(([q, k]) => { const el = document.querySelector(q); if (el) { el.dataset.mix = k; io3.observe(el); } });
   }
 
   /* ---- 橫樑底下的紅繩：讀到哪裡拉到哪裡 ---- */
