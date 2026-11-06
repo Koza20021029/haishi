@@ -80,7 +80,8 @@ h1.g .sr { font-size: 1px; }
 .lab-sea span { color: var(--pearl-2); }
 .lab-mkt { right: calc(max(var(--m), calc(50% - var(--glyph) * 1.25)) + var(--glyph) * 1.08); top: 50%; translate: 0 calc(var(--glyph) * .2 + 6px); text-align: right; justify-items: end; }
 .lab-mkt b { color: var(--board); }
-.lab-mkt span { color: #dfe4d8; }
+.lab-mkt span { color: #dfe4d8; text-shadow: 0 1px 2px rgba(6,8,8,.9), 0 0 12px rgba(6,8,8,.85), 0 0 26px rgba(6,8,8,.6); }
+.lab-mkt b { text-shadow: 0 1px 2px rgba(6,8,8,.7), 0 0 18px rgba(6,8,8,.6); }
 .lab b::after { content: ""; display: block; height: 2px; margin-top: 8px; background: currentColor; transform: scaleX(.18); transform-origin: left; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
 .lab-mkt b::after { transform-origin: right; }
 .sea:hover ~ .lab-sea b::after, .sea:focus-visible ~ .lab-sea b::after, .market:hover ~ .lab-mkt b::after, .market:focus-visible ~ .lab-mkt b::after { transform: scaleX(1); }
@@ -109,6 +110,9 @@ h1.g .sr { font-size: 1px; }
 .quote { position: absolute; z-index: 6; left: var(--m); top: max(var(--m), env(safe-area-inset-top, 0px)); display: flex; gap: 14px; pointer-events: none; writing-mode: vertical-rl; }
 .quote span:first-child { font-size: 17px; letter-spacing: .5em; }
 .quote span:last-child { font-size: 14px; letter-spacing: .4em; opacity: .75; }
+/* 游標進市場時地平線上收、「海」會升到引文的位置：引文先退開 */
+.quote { transition: opacity .45s ease; }
+.gate.on-mkt .quote { opacity: 0; }
 .about { position: absolute; z-index: 6; right: var(--m); top: max(var(--m), env(safe-area-inset-top, 0px)); margin: 0; font-size: 15px; letter-spacing: .12em; color: var(--pearl-2); pointer-events: none; white-space: nowrap; }
 .credit { position: absolute; z-index: 6; right: var(--m); bottom: max(24px, env(safe-area-inset-bottom, 0px)); margin: 0; font-size: 14px; color: #c3cbc4; pointer-events: none; }
 
