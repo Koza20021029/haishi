@@ -103,7 +103,8 @@ window.HAISHI = {
     'images/found/shezi-overlook.jpg': { cap: '從山上看社子島，兩條河夾著的沙洲', by: 'vixyao，CC BY-SA 2.0', url: 'https://commons.wikimedia.org/wiki/File:Shezi_overlook.jpg' },
     'images/found/dsc-5044.jpg': { cap: '社子島與社子大橋', by: 'Taiwankengo，CC BY-SA 3.0', url: 'https://commons.wikimedia.org/wiki/File:%E7%A4%BE%E5%AD%90%E5%A4%A7%E6%A9%8BDSC_5044.jpg' },
     'images/found/night-in-shezi-bridge-20140830.jpg': { cap: '夜裡的社子大橋', by: 'David Jackson，CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Night_in_Shezi_Bridge_20140830.jpg' },
-    'images/found/ice-blocks-melting-in-an-old-oven.jpg': { cap: '正在化的冰', by: 'W.carter，CC BY-SA 4.0', url: 'https://commons.wikimedia.org/w/index.php?curid=138564078' }
+    'images/found/ice-blocks-melting-in-an-old-oven.jpg': { cap: '正在化的冰', by: 'W.carter，CC BY-SA 4.0', url: 'https://commons.wikimedia.org/w/index.php?curid=138564078' },
+    'images/found/ice-cubes-melting-in-a-glass.webm': { cap: '杯子裡的冰慢慢化成水（縮時影片）', by: 'Philip Serracino Inglott，CC BY-SA 3.0', url: 'https://commons.wikimedia.org/wiki/File:Ice_cubes_melting_in_a_glass.ogv' }
   },
 
   // Koza 走讀心得裡的一句，放在網頁最後

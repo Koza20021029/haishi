@@ -26,3 +26,44 @@ a { color: inherit; }
 .vertical { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: .35em; }
 .tag-red { font-family: var(--f-hand); background: var(--red); color: #fff; padding: 2px 10px; border-radius: 2px; display: inline-block; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ===== 換頁（js/passage.js）=====
+   body::before 是離開時蓋上來的那一層，body::after 是到達時掀開的那一層。
+   鐵捲門：深藍灰的門板一條一條，下緣一根底樑，門上漆著「海市」。 */
+:root {
+  --shutter: #2c3d4c;
+  --shutter-slats: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='26'%3E%3Crect y='20' width='8' height='4' fill='%23000' fill-opacity='.26'/%3E%3Crect y='24' width='8' height='2' fill='%23fff' fill-opacity='.07'/%3E%3C/svg%3E");
+  --night: #05090c;
+}
+body::before, body::after {
+  content: ""; position: fixed; inset: 0; z-index: 300; pointer-events: none;
+  display: grid; place-items: center; box-sizing: border-box;
+  font: 900 min(36vw, 42vh)/1 var(--f-myth); letter-spacing: .08em; color: transparent;
+  opacity: 0; visibility: hidden;
+}
+/* 鐵捲門的樣子（兩層共用） */
+html[data-leave="shutter"] body::before, html[data-arrive="shutter"] body::after {
+  content: "海市"; color: rgba(233, 236, 226, .085); background: var(--shutter) var(--shutter-slats);
+  border-bottom: 18px solid #1b2422; opacity: 1; visibility: visible;
+}
+html[data-leave="fog"] body::before, html[data-arrive="fog"] body::after,
+html[data-leave="horizon"] body::before, html[data-arrive="horizon"] body::after { background: var(--night); visibility: visible; }
+
+/* 離開：門從上面拉下來／霧漫上來／夜色從地平線往上下展開 */
+html[data-leave] body::before { pointer-events: auto; }
+html[data-leave="shutter"] body::before { animation: pv-shut .72s cubic-bezier(.62, 0, .3, 1) both; }
+html[data-leave="fog"] body::before { animation: pv-fog .76s cubic-bezier(.4, 0, .6, 1) both; }
+html[data-leave="horizon"] body::before { animation: pv-open-line .7s cubic-bezier(.6, 0, .2, 1) both; }
+@keyframes pv-shut { from { transform: translateY(-101%); } 82% { transform: translateY(1.2%); } to { transform: none; } }
+@keyframes pv-fog { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pv-open-line { from { opacity: 1; clip-path: inset(50% 0 50% 0); } to { opacity: 1; clip-path: inset(0); } }
+
+/* 到達：一開始就蓋著（head 裡設好），等頁面畫好再掀開 */
+html[data-arrive="fog"] body::after, html[data-arrive="horizon"] body::after { opacity: 1; }
+html[data-arrive-go][data-arrive="shutter"] body::after { animation: pv-lift .95s cubic-bezier(.55, 0, .2, 1) .08s both; }
+html[data-arrive-go][data-arrive="fog"] body::after { animation: pv-clear 1.2s ease-out both; }
+html[data-arrive-go][data-arrive="horizon"] body::after { animation: pv-close-line .8s cubic-bezier(.6, 0, .2, 1) both; }
+@keyframes pv-lift { from { transform: none; } 14% { transform: translateY(2.2%); } to { transform: translateY(-101%); } }
+@keyframes pv-clear { from { opacity: 1; } to { opacity: 0; } }
+@keyframes pv-close-line { from { clip-path: inset(0); } to { clip-path: inset(50% 0 50% 0); } }
+@media (prefers-reduced-motion: reduce) { body::before, body::after { display: none !important; } }

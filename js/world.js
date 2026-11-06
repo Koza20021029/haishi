@@ -1132,13 +1132,15 @@
   /* ---------- 雙溪：淺山圍著的小鎮，兩條溪匯流，老街、三忠廟、宜蘭線 ---------- */
   // 地標牌：一條細光線往上，頂端掛名字。只在看得到日常樣子時出現
   // 地名牌另外收在 pinSink，平常收起來，滑鼠移到島上或打開那個場域的側欄才浮出來
-  let pinSink = null;
+  // 每一塊牌子另外記一筆（pinRecs），才能只浮出離游標最近的那一塊
+  let pinSink = null, pinRecs = null;
   function pin(g, mats0, text, x, z, top, base = 1.4) {
-    const mats = pinSink || mats0;
-    const lm = new T.LineBasicMaterial({ color: lin(1.5, 1.2, .75), transparent: true, opacity: .6, toneMapped: false, depthWrite: false }); lm.userData.base = .6; mats.push(lm);
+    const mats = pinSink || mats0, own = [];
+    const lm = new T.LineBasicMaterial({ color: lin(1.5, 1.2, .75), transparent: true, opacity: .6, toneMapped: false, depthWrite: false }); lm.userData.base = .6; mats.push(lm); own.push(lm);
     const lg = new T.BufferGeometry(); lg.setAttribute('position', new T.Float32BufferAttribute([x, base, z, x, top, z], 3)); g.add(new T.LineSegments(lg, lm));
-    const l = label(text, { size: 52, height: 2.5, color: '#f6e7c4', weight: 600 }); l.center.set(.5, 0); l.position.set(x, top + .35, z); l.material.userData.base = 1; mats.push(l.material); g.add(l);
-    const d = glow(lin(1.8, 1.3, .7), 1.3, .9); d.position.set(x, top, z); d.material.userData.base = .9; mats.push(d.material); g.add(d);
+    const l = label(text, { size: 52, height: 1.85, color: '#f6e7c4', weight: 600 }); l.center.set(.5, 0); l.position.set(x, top + .35, z); l.material.userData.base = 1; mats.push(l.material); own.push(l.material); g.add(l);
+    const d = glow(lin(1.8, 1.3, .7), 1.3, .9); d.position.set(x, top, z); d.material.userData.base = .9; mats.push(d.material); own.push(d.material); g.add(d);
+    if (pinRecs) pinRecs.push({ mats: own, at: l, k: 0 });
   }
   function buildShuangxi(g, K, pts, mats) {
     const mg = Merger();
@@ -1674,7 +1676,7 @@
 
   function buildDaily(def) {
     const g = new T.Group(), mats = [], pts = [];
-    pinSink = [];
+    pinSink = []; pinRecs = [];
     const K = islandKit(mats);
     if (def.id === 'shuangxi') buildShuangxi(g, K, pts, mats);
     if (def.id === 'hangkong') buildHangkong(g, K, pts, mats);
@@ -1684,8 +1686,8 @@
       if (m.color.r > .98 && m.color.g > .98 && m.color.b > .98) {   // 白色在色彩管理下會變成 fefefe，不能用 === 0xffffff 判斷         // 樹、油桶這類靠 instanceColor 上色的：補光也要乘上各自的顏色，不然每一面都發白
         m.emissive.setScalar(.26); m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n#if defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )\ntotalEmissiveRadiance *= vColor.rgb;\n#endif'); };
       } else m.emissive.copy(m.color).multiplyScalar(.26); });
-    const pins = pinSink; pinSink = null;
-    return { g, mats, pts, pins };
+    const pins = pinSink, recs = pinRecs; pinSink = null; pinRecs = null;
+    return { g, mats, pts, pins, recs };
   }
 
   /* ---------- 島的水邊：一圈石頭、一條白浪、貼著水面的低水氣（只在看得到日常樣子時出現） ---------- */
@@ -1743,7 +1745,7 @@
       o.material.userData.base = o.material.opacity * .5; ghostMats.push(o.material); });
     ghost.scale.y = -.7; root.add(ghost);
     Dl.pins.forEach(m => { m.userData.base = m.userData.base ?? m.opacity; });
-    const isl = { def, site, root, R, Dl, cloud, pm, name, hit, near: false, ghost, ghostMats, ghostTop: R.maxH + 1.4, pins: Dl.pins, pinK: 0 };
+    const isl = { def, site, root, R, Dl, cloud, pm, name, hit, near: false, ghost, ghostMats, ghostTop: R.maxH + 1.4, pins: Dl.pins, recs: Dl.recs, pinK: 0 };
     islands.push(isl); return isl;
   }
   const setOp = (list, k) => list.forEach(m => { m.opacity = m.userData.base * k; m.visible = k > .01; });
@@ -1874,6 +1876,7 @@
     const h = ray.intersectObjects(ices.filter(i => i.stall).map(i => i.shell), false);
     el.style.cursor = h.length ? 'pointer' : '';
     const hi = ray.intersectObjects(islands.map(i => i.hit), false); hoverSite = hi.length ? hi[0].object.userData.site : null;
+    pointer.x = e.clientX; pointer.y = e.clientY;
   });
 
   /* ================= 導覽 ================= */
@@ -1914,7 +1917,7 @@
   function setFree(on) {
     free = on; document.body.classList.toggle('free', on);
     $('tourBtn').setAttribute('aria-pressed', String(!on)); $('freeBtn').setAttribute('aria-pressed', String(on));
-    if (on) { $('caption').classList.remove('on'); Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1, expo: .92 }); flyTo(VIEWS.overview, 4); toast('拖曳轉動視角，滾輪或雙指縮放。<br>點海上的樓臺或攤上的冰。'); }
+    if (on) { $('caption').classList.remove('on'); closePanel(); Object.assign(target, { fog: .0012, clear: 1, rate: 1, reveal: 1, breath: 1, expo: .92 }); flyTo(VIEWS.overview, 4); toast('拖曳轉動視角，滾輪或雙指縮放。<br>點海上的樓臺或攤上的冰。'); }
   }
   $('next').addEventListener('click', next); $('prev').addEventListener('click', prev);
   $('tourBtn').addEventListener('click', () => { setFree(false); go(0); });
@@ -1945,6 +1948,7 @@
     return wrap;
   }
   let hoverSite = null, panelSite = null;
+  const pointer = { x: -1e4, y: -1e4 }, _pv = new T.Vector3();
   function openPanel(id) {
     panelSite = id;
     const s = S(id), body = $('panelBody');
@@ -2126,7 +2130,12 @@
       if (t > callNext && t > vendorUntil) { callIdx = (callIdx + 1) % CALLS.length; callNext = t + 6; vendorLine = `「${CALLS[callIdx]}」`; if (d < 40) speak(CALLS[callIdx]); }
       if (callout.textContent !== vendorLine) callout.textContent = vendorLine;
       const p = stallWorld.clone().project(camera);
-      if (p.z < 1) { callout.style.transform = `translate(${(p.x * .5 + .5) * innerWidth}px, ${(-p.y * .5 + .5) * innerHeight}px) translate(-50%, -100%)`; }
+      if (p.z < 1) {
+        // 對話框不要壓到上面的按鈕、左右邊緣和打開的側欄：夾在安全範圍裡
+        const bw = callout.offsetWidth, bh = callout.offsetHeight, right = innerWidth - (document.body.classList.contains('panel-open') && innerWidth > 760 ? Math.min(410, innerWidth) : 0);
+        const x = Math.min(right - bw / 2 - 16, Math.max(bw / 2 + 16, (p.x * .5 + .5) * innerWidth));
+        const y = Math.max((innerWidth <= 760 ? 118 : 84) + bh, (-p.y * .5 + .5) * innerHeight);
+        callout.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`; }
     }
     callout.classList.toggle('on', show && !!vendorLine);
   }
@@ -2193,7 +2202,14 @@
       const scat = 1 - smooth(13, 42, d);
       const dA = (1 - smooth(135, 240, d)) * (1 - smooth(.2, .75, scat)) * rv;
       setOp(is.R.mats, rA); setOp(is.Dl.mats, dA); 
-      is.pinK += ((hoverSite === is.site.id || panelSite === is.site.id ? 1 : 0) - is.pinK) * ease; setOp(is.pins, dA * is.pinK);
+      // 地名牌：游標在島上時，只浮出離游標最近的那一塊；打開側欄（手機上沒有游標）時全部浮出，但淡一點
+      is.pinK += ((hoverSite === is.site.id || panelSite === is.site.id ? 1 : 0) - is.pinK) * ease;
+      { let best = null;
+        if (hoverSite === is.site.id && is.pinK > .02) { let bd = 150 * 150;
+          is.recs.forEach(pr => { pr.at.getWorldPosition(_pv).project(camera); if (_pv.z > 1) return;
+            const sx = (_pv.x * .5 + .5) * innerWidth - pointer.x, sy = (-_pv.y * .5 + .5) * innerHeight - pointer.y, dd = sx * sx + sy * sy; if (dd < bd) { bd = dd; best = pr; } }); }
+        const all = panelSite === is.site.id && hoverSite !== is.site.id ? (innerWidth > 760 ? .5 : .72) : 0;   // 桌機上側欄已經在說這座島，牌子退後一點
+        is.recs.forEach(pr => { pr.k += ((pr === best ? 1 : all) - pr.k) * ease; setOp(pr.mats, dA * is.pinK * pr.k); }); }
       { const flick = reduce ? .6 : smooth(.15, .85, (Math.sin(t * .19 + i * 2.1) * .5 + .5) * (Math.sin(t * .47 + i * 1.3) * .35 + .65));
         const sq = reduce ? .7 : .55 + Math.sin(t * .31 + i) * .2 + Math.sin(t * .83 + i * 3) * .05, top = is.ghostTop;
         setOp(is.ghostMats, rA * flick); is.ghost.visible = rA * flick > .01;
@@ -2202,7 +2218,7 @@
       is.Dl.g.visible = dA > .01; is.R.g.visible = rA > .01; 
       is.pm.uniforms.uS.value = scat; is.pm.uniforms.uT.value = t; is.pm.uniforms.uA.value = rv * (scat > .02 ? Math.min(1, scat * 2.5) * (1 - smooth(.75, 1, scat) * .6) : 0);
       is.cloud.visible = is.pm.uniforms.uA.value > .01;
-      is.name.material.opacity = (free ? 1 : 0) * rv * smooth(40, 90, d) * smooth(40, 110, camera.position.distanceTo(LK.position));   // 在攤前看冰時，遠方的島名不要疊在冰上 is.name.visible = is.name.material.opacity > .01;
+      is.name.material.opacity = (free ? 1 : 0) * rv * smooth(110, 175, d) * smooth(40, 110, camera.position.distanceTo(LK.position));   // 中距離看得到日常的樣子時，島名大字就退開   // 在攤前看冰時，遠方的島名不要疊在冰上 is.name.visible = is.name.material.opacity > .01;
       if (!reduce) { is.R.g.position.x = Math.sin(t * .7 + i) * 1.2; is.R.g.scale.y = 1 + Math.sin(t * .5 + i) * .025; }
       if (is.Dl.g.userData.anim && is.Dl.g.visible) is.Dl.g.userData.anim(t, dt);
       if (d < 40 && started) nearName = is.site.name;
